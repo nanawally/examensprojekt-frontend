@@ -17,7 +17,7 @@ function App() {
     });
   }, []);
 
-  return <div id="phaser-container" />;
+  return <div id="phaser-container" style={{ width: "100%", height: "100%" }} />;
 }
 
 export default App;
