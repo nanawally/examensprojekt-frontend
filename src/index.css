@@ -13,6 +13,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html, body, #root, #phaser-container {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* optional: prevents scrollbars */
+}
+
 a {
   font-weight: 500;
   color: #646cff;
