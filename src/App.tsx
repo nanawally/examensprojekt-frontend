@@ -18,6 +18,14 @@ function App() {
         mode: Phaser.Scale.RESIZE, // important for full-viewport responsiveness
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
+      /* The ‘debug: true’ setting will show you the velocity and the hit area of any object that has physics. It is great for debugging. Make sure you turn it off before publishing your game so your players don’t see the bounding boxes */
+      physics: {
+        default: "arcade",
+        arcade: {
+          gravity: { x: 0, y: 300 },
+          debug: true,
+        },
+      },
     });
   }, []);
 
