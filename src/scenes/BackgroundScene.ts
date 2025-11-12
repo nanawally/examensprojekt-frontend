@@ -1,11 +1,16 @@
 import Phaser from "phaser";
-import PlayerSprite from "../sprites/PlayerSprite";
+import PlayerSprite from "../sprites/players/PlayerSprite";
+import MusicNoteSprite from "../sprites/items/MusicNoteSprite";
 
 export default class BackgroundScene extends Phaser.Scene {
   private cloudsWhite!: Phaser.GameObjects.TileSprite;
   private cloudsWhiteSmall!: Phaser.GameObjects.TileSprite;
   private bricks!: Phaser.GameObjects.TileSprite;
   private player!: PlayerSprite;
+  private spriteSize!: 128 | 256 | 512 | 1024;
+  private noteSize!: 128 | 256 | 512;
+
+  private musicNotes!: Phaser.GameObjects.Group;
 
   constructor() {
     super({ key: "BackgroundScene" });
@@ -14,15 +19,27 @@ export default class BackgroundScene extends Phaser.Scene {
   preload(): void {
     const effectiveWidth = window.innerWidth * window.devicePixelRatio;
 
-    let spriteSize: 256 | 512 | 1024;
-    if (effectiveWidth > 2000) spriteSize = 1024;
-    else if (effectiveWidth > 1000) spriteSize = 512;
-    else spriteSize = 256;
+    if (effectiveWidth > 2000) this.spriteSize = 512;
+    else if (effectiveWidth > 1000) this.spriteSize = 256;
+    else this.spriteSize = 128;
+
+    if (effectiveWidth > 2000) this.noteSize = 256;
+    else if (effectiveWidth > 1000) this.noteSize = 128;
+    else this.noteSize = 128;
 
     this.load.spritesheet(
       "player",
-      `/assets/spritesheets/boy_right_${spriteSize}.png`,
-      { frameWidth: spriteSize, frameHeight: spriteSize }
+      `/assets/spritesheets/boy_right_${this.spriteSize}.png`,
+      { frameWidth: this.spriteSize, frameHeight: this.spriteSize }
+    );
+
+    this.load.spritesheet(
+      "musicnote",
+      `/assets/spritesheets/music-notes_${this.noteSize}.png`,
+      {
+        frameWidth: this.noteSize,
+        frameHeight: this.noteSize,
+      }
     );
 
     this.load.image("clouds-white", "/assets/img/clouds-white.png");
@@ -35,6 +52,12 @@ export default class BackgroundScene extends Phaser.Scene {
     // (640, 200) = x, y midpoint; (1280, 400) = width, height
     const width = this.scale.width;
     const height = this.scale.height;
+    const gravity = 800;
+    // Reference to calculate jump height
+    /*
+    const jumpVelocity = -800;
+    const jumpHeight = jumpVelocity ** 2 / (2 * gravity); // 640000 / 1600 = 400px
+    */
     this.physics.world.setBounds(0, 0, width, height);
 
     this.cloudsWhite = this.add.tileSprite(
@@ -69,6 +92,25 @@ export default class BackgroundScene extends Phaser.Scene {
     ground.displayWidth = width;
     ground.displayHeight = height / 3;
     ground.setVisible(false); //invisible, only used for collision
+    /*
+    this.anims.create({
+      key: "musicnote-roll",
+      frames: this.anims.generateFrameNumbers("musicnote", {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 8,
+      repeat: -1,
+    });
+    */
+    this.musicNotes = this.add.group({ runChildUpdate: true });
+
+    this.time.addEvent({
+      delay: 2000,
+      callback: this.spawnMusicNote,
+      callbackScope: this,
+      loop: true,
+    });
 
     this.anims.create({
       key: "walk",
@@ -82,26 +124,60 @@ export default class BackgroundScene extends Phaser.Scene {
       height * (3 / 6),
       "player"
     ) as PlayerSprite;
-    this.player.setGravityY(100);
-    //this.player.setScale(1);
-    // Shrink the physics body
-    this.player.body!.setSize(this.player.width, this.player.height / 2); // only bottom half collides
-    this.player.body!.setOffset(0, this.player.height / 2);
+    this.player.setOrigin(0.5, 1);
+    this.player.setGravityY(gravity);
+    this.player.body!.setSize(this.spriteSize, this.spriteSize * 1.5);
+    this.player.body!.setOffset(0, 0);
     this.player.setCollideWorldBounds(true);
     this.player.play("walk");
 
     this.physics.add.collider(this.player, ground);
+    this.physics.add.overlap(
+      this.player,
+      this.musicNotes,
+      (player, note) => {
+        (note as MusicNoteSprite).collect();
+      },
+      undefined,
+      this
+    );
 
     this.input.on("pointerdown", () => {
       const body = this.player.body as Phaser.Physics.Arcade.Body;
-      // Only jump if touching the ground
       if (body.blocked.down || body.touching.down) {
-        this.player.setVelocityY(-500);
+        const jumpHeight = this.scale.height * 0.6;
+        const jumpVelocity = -Math.sqrt(2 * gravity * jumpHeight);
+        this.player.setVelocityY(jumpVelocity);
       }
     });
+  }
 
-    // 4️⃣ Recreate scene when resized significantly (optional)
-    window.addEventListener("resize", () => this.handleResize());
+  update(): void {
+    this.cloudsWhite.tilePositionX += 0.5;
+    this.cloudsWhiteSmall.tilePositionX += 0.25;
+    this.bricks.tilePositionX += 0.5;
+
+    // notes destroyed when offscreen)
+
+    for (const child of this.musicNotes.getChildren()) {
+      (child as MusicNoteSprite).update();
+    }
+  }
+
+  private spawnMusicNote(): void {
+    const x = this.scale.width + 50;
+    const y = this.scale.height * (1 / 1.8) - 150;
+
+    const note = new MusicNoteSprite(this, x, y);
+    this.musicNotes.add(note);
+  }
+  
+  private handleNoteCollision(
+    playerObj: Phaser.GameObjects.GameObject,
+    noteObj: Phaser.GameObjects.GameObject
+  ): void {
+    const note = noteObj as MusicNoteSprite;
+    note.collect();
   }
 
   private handleResize(): void {
@@ -120,11 +196,5 @@ export default class BackgroundScene extends Phaser.Scene {
         this.scene.restart();
       }
     });
-  }
-
-  update(): void {
-    this.cloudsWhite.tilePositionX += 0.5;
-    this.cloudsWhiteSmall.tilePositionX += 0.25;
-    this.bricks.tilePositionX += 0.5;
   }
 }
