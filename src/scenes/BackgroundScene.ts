@@ -6,10 +6,8 @@ export default class BackgroundScene extends Phaser.Scene {
   private cloudsWhite!: Phaser.GameObjects.TileSprite;
   private cloudsWhiteSmall!: Phaser.GameObjects.TileSprite;
   private bricks!: Phaser.GameObjects.TileSprite;
+  private ground!: Phaser.Physics.Arcade.Sprite;
   private player!: PlayerSprite;
-  private spriteSize!: 128 | 256 | 512 | 1024;
-  private noteSize!: 128 | 256 | 512;
-
   private musicNotes!: Phaser.GameObjects.Group;
 
   constructor() {
@@ -17,30 +15,21 @@ export default class BackgroundScene extends Phaser.Scene {
   }
 
   preload(): void {
-    const effectiveWidth = window.innerWidth * window.devicePixelRatio;
-
-    if (effectiveWidth > 2000) this.spriteSize = 512;
-    else if (effectiveWidth > 1000) this.spriteSize = 256;
-    else this.spriteSize = 128;
-
-    if (effectiveWidth > 2000) this.noteSize = 256;
-    else if (effectiveWidth > 1000) this.noteSize = 128;
-    else this.noteSize = 128;
-
-    this.load.spritesheet(
-      "player",
-      `/assets/spritesheets/boy_right_${this.spriteSize}.png`,
-      { frameWidth: this.spriteSize, frameHeight: this.spriteSize }
-    );
+    this.load.spritesheet("player", `/assets/spritesheets/boy_right_1024.png`, {
+      frameWidth: 1024,
+      frameHeight: 1024,
+    });
 
     this.load.spritesheet(
       "musicnote",
-      `/assets/spritesheets/music-notes_${this.noteSize}.png`,
+      `/assets/spritesheets/music-notes_512.png`,
       {
-        frameWidth: this.noteSize,
-        frameHeight: this.noteSize,
+        frameWidth: 256,
+        frameHeight: 256,
       }
     );
+
+    this.load.json("testsongMap", "/assets/songmaps/testsong.json");
 
     this.load.image("clouds-white", "/assets/img/clouds-white.png");
     this.load.image("clouds-white-small", "/assets/img/clouds-white-small.png");
@@ -50,15 +39,13 @@ export default class BackgroundScene extends Phaser.Scene {
   create(): void {
     // Add tile sprites centered on screen
     // (640, 200) = x, y midpoint; (1280, 400) = width, height
-    const width = this.scale.width;
-    const height = this.scale.height;
+    const { width, height } = this.scale.gameSize;
     const gravity = 800;
     // Reference to calculate jump height
-    /*
-    const jumpVelocity = -800;
-    const jumpHeight = jumpVelocity ** 2 / (2 * gravity); // 640000 / 1600 = 400px
-    */
-    this.physics.world.setBounds(0, 0, width, height);
+    // const jumpVelocity = -800;
+    // const jumpHeight = jumpVelocity ** 2 / (2 * gravity); // 640000 / 1600 = 400px
+
+    this.scale.on("resize", this.handleResize, this);
 
     this.cloudsWhite = this.add.tileSprite(
       width / 2,
@@ -78,39 +65,40 @@ export default class BackgroundScene extends Phaser.Scene {
 
     this.bricks = this.add.tileSprite(
       width / 2,
-      height * (5 / 6),
+      height - height / 3 / 2,
       width,
       height / 3,
       "bricks"
     );
 
-    const ground = this.physics.add.staticSprite(
+    this.ground = this.physics.add.staticSprite(
       width / 2,
-      height * (5 / 6),
+      height - height / 6 / 2,
       "bricks"
     );
-    ground.displayWidth = width;
-    ground.displayHeight = height / 3;
-    ground.setVisible(false); //invisible, only used for collision
-    /*
-    this.anims.create({
-      key: "musicnote-roll",
-      frames: this.anims.generateFrameNumbers("musicnote", {
-        start: 0,
-        end: 3,
-      }),
-      frameRate: 8,
-      repeat: -1,
-    });
-    */
+    const brickImg = this.textures.get("bricks").getSourceImage();
+    this.ground.setScale(width / brickImg.width, height / 6 / brickImg.height);
+    this.ground.refreshBody();
+    this.ground.setVisible(false); //invisible, only used for collision
+
+    const songMap = this.cache.json.get("testsongMap");
+
     this.musicNotes = this.add.group({ runChildUpdate: true });
 
-    this.time.addEvent({
+    //this.sound.play('songkey');
+
+    this.scheduleNotesFromMap(songMap);
+
+    /*const music = this.sound.add("song1");
+    music.play();
+    const startTime = this.time.now; // Phaser timestamp when song started */
+
+    /*this.time.addEvent({
       delay: 2000,
       callback: this.spawnMusicNote,
       callbackScope: this,
       loop: true,
-    });
+    });*/
 
     this.anims.create({
       key: "walk",
@@ -121,17 +109,23 @@ export default class BackgroundScene extends Phaser.Scene {
 
     this.player = this.physics.add.sprite(
       width / 4,
-      height * (3 / 6),
+      height * 0.5,
       "player"
     ) as PlayerSprite;
+    const targetHeight = this.scale.height * 0.5;
+    const frameHeight = this.textures.get("player").get(0).height;
+    this.player.setScale(targetHeight / frameHeight);
+    this.player.body!.setSize(
+      this.player.displayWidth,
+      this.player.displayHeight
+    );
+    //this.player.body!.setOffset(0, 0);
     this.player.setOrigin(0.5, 1);
     this.player.setGravityY(gravity);
-    this.player.body!.setSize(this.spriteSize, this.spriteSize * 1.5);
-    this.player.body!.setOffset(0, 0);
     this.player.setCollideWorldBounds(true);
     this.player.play("walk");
 
-    this.physics.add.collider(this.player, ground);
+    this.physics.add.collider(this.player, this.ground);
     this.physics.add.overlap(
       this.player,
       this.musicNotes,
@@ -150,6 +144,8 @@ export default class BackgroundScene extends Phaser.Scene {
         this.player.setVelocityY(jumpVelocity);
       }
     });
+
+    this.updateCamera();
   }
 
   update(): void {
@@ -164,14 +160,30 @@ export default class BackgroundScene extends Phaser.Scene {
     }
   }
 
-  private spawnMusicNote(): void {
+  private spawnMusicNote(lane: number, frame: number): void {
     const x = this.scale.width + 50;
-    const y = this.scale.height * (1 / 1.8) - 150;
+    const yPositions = [100, 200, 300, 400]; //lanes
+    const y = yPositions[lane - 1];
 
-    const note = new MusicNoteSprite(this, x, y);
+    const note = new MusicNoteSprite(this, x, y, frame);
     this.musicNotes.add(note);
   }
-  
+
+  private scheduleNotesFromMap(songMap: any) {
+    const distanceToHitLine = 600; // px from spawn to hit line
+    const speed = 200; // px/s your notes move
+    const travelTime = (distanceToHitLine / speed) * 1000; // convert seconds to ms
+
+    songMap.notes.forEach((note: any) => {
+      const spawnTime = note.time - travelTime; // when the note should spawn
+      if (spawnTime >= 0) {
+        this.time.delayedCall(spawnTime, () => {
+          this.spawnMusicNote(note.lane, note.frame);
+        });
+      }
+    });
+  }
+
   private handleNoteCollision(
     playerObj: Phaser.GameObjects.GameObject,
     noteObj: Phaser.GameObjects.GameObject
@@ -180,21 +192,61 @@ export default class BackgroundScene extends Phaser.Scene {
     note.collect();
   }
 
+  private updateCamera(): void {
+    const camera = this.cameras.main;
+    // Make the camera match the canvas exactly
+    camera.setViewport(0, 0, this.scale.width, this.scale.height);
+
+    // No zooming (RESIZE mode already handles scaling internally)
+    camera.setZoom(1);
+
+    camera.centerOn(this.scale.width / 2, this.scale.height / 2);
+
+    // Resize backgrounds to match full screen automatically
+    this.cloudsWhite.setSize(this.scale.width, this.scale.height);
+    this.cloudsWhiteSmall.setSize(this.scale.width, this.scale.height);
+  }
+
   private handleResize(): void {
-    // Throttle reload to avoid flickering
-    this.time.delayedCall(500, () => {
-      const effectiveWidth = window.innerWidth * window.devicePixelRatio;
-      const currentSpriteSize = this.textures.get("player").get(0).width ?? 512;
+    // If scene isn't fully created yet, ignore the event.
+    if (!this.cameras || !this.cameras.main) return;
 
-      let idealSize: 256 | 512 | 1024;
-      if (effectiveWidth > 2000) idealSize = 1024;
-      else if (effectiveWidth > 1000) idealSize = 512;
-      else idealSize = 256;
+    const width = this.scale.width;
+    const height = this.scale.height;
 
-      if (idealSize !== currentSpriteSize) {
-        // Reload scene to use new asset
-        this.scene.restart();
-      }
+    // Update camera
+    this.updateCamera();
+
+    // Safely resize backgrounds ONLY if they exist
+    if (this.cloudsWhite) {
+      this.cloudsWhite.setSize(width, height);
+    }
+
+    if (this.cloudsWhiteSmall) {
+      this.cloudsWhiteSmall.setSize(width, height);
+    }
+
+    if (this.bricks) {
+      this.bricks.setSize(width, height / 3);
+      this.bricks.setPosition(width / 2, height - height / 3 / 2);
+    }
+
+    if (this.ground) {
+      const brickImg = this.textures.get("bricks").getSourceImage();
+      this.ground.setScale(
+        width / brickImg.width,
+        height / 6 / brickImg.height
+      );
+      this.ground.refreshBody();
+    }
+
+    this.musicNotes.getChildren().forEach((child) => {
+      const note = child as MusicNoteSprite;
+
+      const targetHeight = this.scale.height * 0.2;
+      const frameHeight = this.textures.get("musicnote").get(0).height;
+      note.setScale(targetHeight / frameHeight);
+      note.body?.setSize(note.displayWidth, note.displayHeight);
     });
   }
 }
