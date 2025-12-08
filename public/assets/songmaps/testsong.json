@@ -5,7 +5,7 @@
     { "time": 1000, "lane": 2, "frame": 1 },
     { "time": 1500, "lane": 1, "frame": 2 },
     { "time": 2000, "lane": 3, "frame": 3 },
-    { "time": 3000, "lane": 4, "frame": 3 },
+    { "time": 3000, "lane": 3, "frame": 3 },
     { "time": 4000, "lane": 2, "frame": 3 },
     { "time": 4320, "lane": 3, "frame": 3 },
     { "time": 5000, "lane": 1, "frame": 3 },

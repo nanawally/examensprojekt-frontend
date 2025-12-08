@@ -1,0 +1,28 @@
+{
+  "bpm": 120,
+  "notes": [
+    { "time": 500, "lane": 1, "frame": 0 },
+    { "time": 1000, "lane": 2, "frame": 1 },
+    { "time": 1500, "lane": 1, "frame": 2 },
+    { "time": 2000, "lane": 3, "frame": 3 },
+    { "time": 3000, "lane": 3, "frame": 3 },
+    { "time": 4000, "lane": 2, "frame": 3 },
+    { "time": 4320, "lane": 3, "frame": 3 },
+    { "time": 5000, "lane": 1, "frame": 3 },
+    { "time": 5372, "lane": 1, "frame": 3 },
+    { "time": 6000, "lane": 4, "frame": 3 },
+    { "time": 6582, "lane": 2, "frame": 3 },
+    { "time": 7000, "lane": 3, "frame": 3 },
+    { "time": 7473, "lane": 2, "frame": 3 },
+    { "time": 7842, "lane": 4, "frame": 3 },
+    { "time": 8329, "lane": 1, "frame": 3 },
+    { "time": 8943, "lane": 4, "frame": 3 },
+    { "time": 9241, "lane": 2, "frame": 3 },
+    { "time": 9883, "lane": 3, "frame": 3 },
+    { "time": 10323, "lane": 2, "frame": 3 },
+    { "time": 10732, "lane": 4, "frame": 3 },
+    { "time": 11379, "lane": 2, "frame": 3 },
+    { "time": 11932, "lane": 1, "frame": 3 },
+    { "time": 12328, "lane": 3, "frame": 3 }
+  ]
+}

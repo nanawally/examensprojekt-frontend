@@ -1,0 +1,21 @@
+Time: when it should appear (or reach the player). Usually in milliseconds from the start of the song.
+
+Type / frame: optional, if your note sprites have different visuals.
+
+Lane / position: optional, if the game has multiple lanes (like columns in Dance Dance Revolution).
+
+{
+  "bpm": 120,
+  "notes": [
+    { "time": 500, "lane": 1, "frame": 0 },
+    { "time": 1000, "lane": 2, "frame": 1 },
+    { "time": 1500, "lane": 1, "frame": 2 },
+    { "time": 2000, "lane": 3, "frame": 3 }
+  ]
+}
+
+time: in milliseconds, from the start of the song.
+
+lane: optional, which “column” the note should appear in.
+
+frame: optional, if you want a specific note sprite for that note.

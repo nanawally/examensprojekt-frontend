@@ -1,32 +1,57 @@
 import Phaser from "phaser";
 
 export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene: Phaser.Scene, x: number, y: number, frame?: number) {
-    super(scene, x, y, "musicnote", frame ?? Phaser.Math.Between(0, 3));
-
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    frame?: number,
+    spriteKey: string = "musicnote" // optional, defaults to your original
+  ) {
+    super(scene, x, y, spriteKey, frame ?? Phaser.Math.Between(0, 3));
+    
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    
-    (this.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-    this.setVelocityX(-200);
-    this.setCollideWorldBounds(false);
 
-    /*const randomFrame = Phaser.Math.Between(0, 3);
-    this.setFrame(randomFrame);*/
+    const body = this.body as Phaser.Physics.Arcade.Body;
+
+    // -------------------------------
+    // Physics properties
+    // -------------------------------
+    body.setAllowGravity(false);
+    body.setCollideWorldBounds(false);
+
+    // -------------------------------
+    // Movement
+    // -------------------------------
+    this.setVelocityX(-200);
     
-    const targetHeight = scene.scale.height * 0.2;
-    const frameHeight = scene.textures.get("musicnote").getSourceImage().height;
+    // -------------------------------
+    // Scaling
+    // -------------------------------
+    const anims = scene.anims;
+    const textureFrame = scene.textures.getFrame(spriteKey, this.frame.name);
+    const frameHeight = textureFrame?.height ?? 256;
+    
+    const targetHeight = scene.scale.height * 0.1; // 10% of screen height
     this.setScale(targetHeight / frameHeight);
-    this.body?.setSize(this.displayWidth, this.displayHeight);
+
+    body.setSize(this.displayWidth, this.displayHeight);
+    this.setOrigin(0.5, 0.5);
   }
 
+  // -------------------------------
+  // Update: destroy offscreen (unchanged)
+  // -------------------------------
   update(): void {
-    // remove when off-screen (to the left)
     if (this.x < -this.width) {
       this.destroy();
     }
   }
 
+  // -------------------------------
+  // Collect: exactly your original
+  // -------------------------------
   collect(): void {
     this.destroy();
   }
