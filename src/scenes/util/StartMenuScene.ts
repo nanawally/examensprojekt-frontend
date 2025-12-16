@@ -7,7 +7,7 @@ export default class StartMenuScene extends Phaser.Scene {
   private popupContainer: Popup | null = null;
   private popupStack: Popup[] = []; // stack popups for song select and part select
   private resizeHandler?: (size: Phaser.Structs.Size) => void;
-  
+
   constructor() {
     super({ key: "StartMenuScene" });
   }
@@ -67,7 +67,15 @@ export default class StartMenuScene extends Phaser.Scene {
       BUTTON_WIDTH,
       BUTTON_HEIGHT,
       () => {
-        this.openInfoPopup("Instructions", "How to play the game...");
+        this.openInfoPopup(
+          "Instructions",
+          [
+            "• Use arrow keys to move",
+            "• Avoid obstacles",
+            "• Collect points",
+            "• Enjoy the music",
+          ].join("\n")
+        );
       }
     );
 
@@ -77,7 +85,19 @@ export default class StartMenuScene extends Phaser.Scene {
       BUTTON_WIDTH,
       BUTTON_HEIGHT,
       () => {
-        this.openInfoPopup("Scoring", "Scoring rules go here...");
+        this.openInfoPopup(
+          "Scoring",
+          [
+            "Every 12 hours:",
+            "Leaderboard for the past 12 hours resets.",
+            "",
+            "Every 24 hours:",
+            "Leaderboard info woo!",
+            "",
+            "All Time:",
+            "Highest scores ever achieved are recorded here.",
+          ].join("\n")
+        );
       }
     );
 
@@ -137,36 +157,22 @@ export default class StartMenuScene extends Phaser.Scene {
     const songButtons: UIButton[] = levels.map(
       (level) =>
         new UIButton(this, level.name, width * 0.35, 60, () => {
-          //this.popupContainer?.destroy();
-          //this.scene.start(level.key);
           this.openPartSelectPopup(level);
         })
     );
-
-    /*this.popupContainer = new Popup(
-      this,
-      width,
-      height,
-      "Select Song",
-      "Choose your track and run!",
-      songButtons,
-      () => {
-        this.popupContainer = null; // Only set to null here — safe & clean
-      }
-    );*/
 
     const popup = new Popup(
       this,
       width,
       height,
       "Select Song",
-      "Choose your track",
+      "",
       songButtons,
       () => {
         this.popPopup();
       }
     );
-
+    
     this.pushPopup(popup);
   }
 
@@ -206,22 +212,6 @@ export default class StartMenuScene extends Phaser.Scene {
   // POPUP: GENERIC INFO POPUP
   // ============================================================
   private openInfoPopup(titleText: string, content: string) {
-    /*if (this.popupContainer) return;
-    
-    const { width, height } = this.scale;
-    
-    this.popupContainer = new Popup(
-      this,
-      width,
-      height,
-      titleText,
-      content,
-      [], // no buttons
-      () => {
-        this.popupContainer = null; // Cleanup reference
-      }
-    );*/
-
     const { width, height } = this.scale;
 
     const popup = new Popup(

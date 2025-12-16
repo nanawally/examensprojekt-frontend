@@ -31,10 +31,10 @@ export default class Popup {
 
     const popupWidth = width * 0.6;
     const popupHeight = height * 0.6;
-    this.maskHeight = popupHeight - 180;
-    this.scrollStartY = -popupHeight / 2 + 150;
+    this.maskHeight = popupHeight - 120;
+    this.scrollStartY = -popupHeight / 2 + 100;
     this.scene = scene;
-
+    
     // -------------------------------------------------
     // OVERLAY (dark background behind popup)
     // -------------------------------------------------
@@ -83,18 +83,22 @@ export default class Popup {
     // CONTENT TEXT
     // -------------------------------------------------
 
+    //const TITLE_BOTTOM_PADDING = 20;
+    //const contentY = title.y + title.height / 2 + TITLE_BOTTOM_PADDING;
+    const contentY = 0;
+    
     const content = scene.add
-      .text(0, -popupHeight / 2 + 110, contentText, {
+      .text(0, contentY, contentText, {
         fontSize: "28px",
         color: "#dddddd",
         fontFamily: "Arial",
         align: "center",
-        wordWrap: { width: popupWidth - 40 },
+        wordWrap: { width: popupWidth - 80 },
+        lineSpacing: 10,
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5, 0); // top-aligned vertically
 
     content.setDepth(1);
-    this.container.add(content);
 
     // -------------------------------------------------
     // SCROLL CONTAINER (for buttons)
@@ -107,9 +111,10 @@ export default class Popup {
       this.scrollContainer.add(btn);
     });
 
-    this.scrollHeight = buttons.length * 70 + 20;
+    this.scrollHeight = content.height + 30 + buttons.length * 70;
     this.scrollContainer.setDepth(2);
     this.container.add(this.scrollContainer);
+    this.scrollContainer.add(content);
 
     // -------------------------------------------------
     //  MASK FOR SCROLLING AREA
@@ -118,7 +123,7 @@ export default class Popup {
     const MASK_PADDING_TOP = 12;
     const worldX = width / 2 - popupWidth / 2 + 20;
     const worldY = height / 2 + this.scrollStartY - MASK_PADDING_TOP;
-
+    
     const maskGfx = scene.add.graphics();
     maskGfx.fillStyle(0xffffff);
     maskGfx.fillRect(
@@ -135,15 +140,11 @@ export default class Popup {
       btn.setMask(this.mask);
     });
 
+    this.scrollContainer.setMask(this.mask);
+
     // -------------------------------------------------
     // CLOSE BUTTON (small X, top-right corner)
     // -------------------------------------------------
-
-    /*const closeBtn = new UIButton(scene, "X", 40, 40, () => this.destroy());
-    closeBtn.x = popupWidth / 2 - 30;
-    closeBtn.y = -popupHeight / 2 + 30;
-    closeBtn.setDepth(3);
-    this.container.add(closeBtn);*/
 
     if (options?.showBackButton) {
       // Back button (top-left)
