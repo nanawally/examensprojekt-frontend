@@ -11,7 +11,7 @@ export default class Popup {
   private scrollStartY: number;
   private maskHeight: number;
   private wheelHandler: (p: any, dx: number, dy: number) => void;
-  
+
   private onClose?: () => void;
   scene: any;
 
@@ -22,7 +22,10 @@ export default class Popup {
     titleText: string,
     contentText: string,
     buttons: UIButton[] = [],
-    onClose?: () => void
+    onClose?: () => void,
+    options?: {
+      showBackButton?: boolean;
+    }
   ) {
     this.onClose = onClose;
 
@@ -111,31 +114,52 @@ export default class Popup {
     // -------------------------------------------------
     //  MASK FOR SCROLLING AREA
     // -------------------------------------------------
-    
+
     const MASK_PADDING_TOP = 12;
     const worldX = width / 2 - popupWidth / 2 + 20;
     const worldY = height / 2 + this.scrollStartY - MASK_PADDING_TOP;
 
     const maskGfx = scene.add.graphics();
     maskGfx.fillStyle(0xffffff);
-    maskGfx.fillRect(worldX, worldY, popupWidth - 40, this.maskHeight + MASK_PADDING_TOP);
-    
+    maskGfx.fillRect(
+      worldX,
+      worldY,
+      popupWidth - 40,
+      this.maskHeight + MASK_PADDING_TOP
+    );
+
     maskGfx.setVisible(false);
 
     this.mask = maskGfx.createGeometryMask();
     buttons.forEach((btn) => {
       btn.setMask(this.mask);
     });
-    
+
     // -------------------------------------------------
     // CLOSE BUTTON (small X, top-right corner)
     // -------------------------------------------------
 
-    const closeBtn = new UIButton(scene, "X", 40, 40, () => this.destroy());
+    /*const closeBtn = new UIButton(scene, "X", 40, 40, () => this.destroy());
     closeBtn.x = popupWidth / 2 - 30;
     closeBtn.y = -popupHeight / 2 + 30;
     closeBtn.setDepth(3);
-    this.container.add(closeBtn);
+    this.container.add(closeBtn);*/
+
+    if (options?.showBackButton) {
+      // Back button (top-left)
+      const backBtn = new UIButton(scene, "<", 40, 40, () => this.onClose?.());
+      backBtn.x = -popupWidth / 2 + 30;
+      backBtn.y = -popupHeight / 2 + 30;
+      backBtn.setDepth(3);
+      this.container.add(backBtn);
+    } else {
+      // Close button (top-right)
+      const closeBtn = new UIButton(scene, "X", 40, 40, () => this.onClose?.());
+      closeBtn.x = popupWidth / 2 - 30;
+      closeBtn.y = -popupHeight / 2 + 30;
+      closeBtn.setDepth(3);
+      this.container.add(closeBtn);
+    }
 
     // -------------------------------------------------
     // SCROLL INPUT HANDLING
@@ -176,6 +200,21 @@ export default class Popup {
     this.container.setPosition(x, y);
     this.overlay.setPosition(x, y);
   }
+  /* ---------------- new---------------------------- */
+  setDepth(depth: number) {
+    this.overlay.setDepth(depth);
+    this.container.setDepth(depth + 1);
+  }
+
+  setActive(active: boolean) {
+    if (active) {
+      this.overlay.setInteractive();
+    } else {
+      this.overlay.disableInteractive();
+    }
+  }
+
+  /* ---------------- new---------------------------- */
 
   destroy() {
     // Remove wheel listener
@@ -190,7 +229,9 @@ export default class Popup {
     this.overlay.destroy();
     this.container.destroy(true);
 
+    console.log("Popup destroyed:", this);
+
     // Call optional onClose callback
-    this.onClose?.();
+    //this.onClose?.();
   }
 }

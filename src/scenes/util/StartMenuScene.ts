@@ -5,8 +5,9 @@ import Popup from "../../components/ui/Popup";
 export default class StartMenuScene extends Phaser.Scene {
   private uiContainer!: Phaser.GameObjects.Container;
   private popupContainer: Popup | null = null;
+  private popupStack: Popup[] = []; // stack popups for song select and part select
   private resizeHandler?: (size: Phaser.Structs.Size) => void;
-
+  
   constructor() {
     super({ key: "StartMenuScene" });
   }
@@ -86,7 +87,8 @@ export default class StartMenuScene extends Phaser.Scene {
       BUTTON_WIDTH,
       BUTTON_HEIGHT,
       () => {
-        window.location.href = "https://example.com";
+        window.location.href =
+          "https://linktr.ee/NoNSEnsSpex?utm_source=linktree_profile_share&ltsid=84c07043-7b55-49c4-be04-c9aa0b8fbec1";
       }
     );
 
@@ -117,10 +119,8 @@ export default class StartMenuScene extends Phaser.Scene {
   // POPUP: SONG SELECT
   // ============================================================
   private openSongSelectPopup() {
-    if (this.popupContainer) return; // prevent double popup
-    
     const { width, height } = this.scale;
-    
+
     const levels = [
       { key: "TestScene1", name: "Test Song" },
       { key: "Song2Scene", name: "Rock Beat" },
@@ -132,17 +132,18 @@ export default class StartMenuScene extends Phaser.Scene {
       { key: "Song2Scene", name: "Final Boss" },
       { key: "Song2Scene", name: "Victory Lap" },
     ];
-    
+
     // Create song buttons
     const songButtons: UIButton[] = levels.map(
       (level) =>
         new UIButton(this, level.name, width * 0.35, 60, () => {
-          this.popupContainer?.destroy();
-          this.scene.start(level.key);
+          //this.popupContainer?.destroy();
+          //this.scene.start(level.key);
+          this.openPartSelectPopup(level);
         })
     );
-    
-    this.popupContainer = new Popup(
+
+    /*this.popupContainer = new Popup(
       this,
       width,
       height,
@@ -152,17 +153,63 @@ export default class StartMenuScene extends Phaser.Scene {
       () => {
         this.popupContainer = null; // Only set to null here — safe & clean
       }
+    );*/
+
+    const popup = new Popup(
+      this,
+      width,
+      height,
+      "Select Song",
+      "Choose your track",
+      songButtons,
+      () => {
+        this.popPopup();
+      }
     );
+
+    this.pushPopup(popup);
+  }
+
+  // ============================================================
+  // POPUP: PART SELECT
+  // ============================================================
+
+  private openPartSelectPopup(level: { key: string; name: string }) {
+    const { width, height } = this.scale;
+
+    const buttons = [
+      new UIButton(this, "Start Level", width * 0.35, 60, () => {
+        this.clearPopups();
+        this.scene.start(level.key);
+      }),
+    ];
+
+    const popup = new Popup(
+      this,
+      width,
+      height,
+      "Select Part",
+      `Choose a part for ${level.name}`,
+      buttons,
+      () => {
+        this.popPopup(); // only closes this popup
+      },
+      {
+        showBackButton: true,
+      }
+    );
+
+    this.pushPopup(popup);
   }
 
   // ============================================================
   // POPUP: GENERIC INFO POPUP
   // ============================================================
   private openInfoPopup(titleText: string, content: string) {
-    if (this.popupContainer) return;
-
+    /*if (this.popupContainer) return;
+    
     const { width, height } = this.scale;
-
+    
     this.popupContainer = new Popup(
       this,
       width,
@@ -173,7 +220,22 @@ export default class StartMenuScene extends Phaser.Scene {
       () => {
         this.popupContainer = null; // Cleanup reference
       }
+    );*/
+
+    const { width, height } = this.scale;
+
+    const popup = new Popup(
+      this,
+      width,
+      height,
+      titleText,
+      content,
+      [],
+      () => this.popPopup(),
+      { showBackButton: false }
     );
+
+    this.pushPopup(popup);
   }
 
   // ============================================================
@@ -188,6 +250,30 @@ export default class StartMenuScene extends Phaser.Scene {
     for (const item of items) {
       item.y = y;
       y += gap;
+    }
+  }
+
+  private pushPopup(popup: Popup) {
+    const depthBase = 100 + this.popupStack.length * 10;
+    popup.setDepth(depthBase);
+
+    // disable input on previous popup
+    this.popupStack.at(-1)?.setActive(false);
+
+    this.popupStack.push(popup);
+  }
+
+  private popPopup() {
+    const popup = this.popupStack.pop();
+    popup?.destroy();
+
+    // re-enable input on previous popup
+    this.popupStack.at(-1)?.setActive(true);
+  }
+
+  private clearPopups() {
+    while (this.popupStack.length) {
+      this.popupStack.pop()?.destroy();
     }
   }
 }
