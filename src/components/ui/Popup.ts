@@ -6,6 +6,8 @@ export default class Popup {
   private scrollContainer: Phaser.GameObjects.Container;
   private overlay: Phaser.GameObjects.Rectangle;
   private mask: Phaser.Display.Masks.GeometryMask;
+  public readonly popupWidth: number; // add this
+  public readonly popupHeight: number;
   private scrollY = 0;
   private scrollHeight = 0;
   private scrollStartY: number;
@@ -31,10 +33,12 @@ export default class Popup {
 
     const popupWidth = width * 0.6;
     const popupHeight = height * 0.6;
+    this.popupWidth = width * 0.6;
+    this.popupHeight = height * 0.6;
     this.maskHeight = popupHeight - 120;
     this.scrollStartY = -popupHeight / 2 + 100;
     this.scene = scene;
-    
+
     // -------------------------------------------------
     // OVERLAY (dark background behind popup)
     // -------------------------------------------------
@@ -86,7 +90,7 @@ export default class Popup {
     //const TITLE_BOTTOM_PADDING = 20;
     //const contentY = title.y + title.height / 2 + TITLE_BOTTOM_PADDING;
     const contentY = 0;
-    
+
     const content = scene.add
       .text(0, contentY, contentText, {
         fontSize: "28px",
@@ -123,7 +127,7 @@ export default class Popup {
     const MASK_PADDING_TOP = 12;
     const worldX = width / 2 - popupWidth / 2 + 20;
     const worldY = height / 2 + this.scrollStartY - MASK_PADDING_TOP;
-    
+
     const maskGfx = scene.add.graphics();
     maskGfx.fillStyle(0xffffff);
     maskGfx.fillRect(
@@ -213,6 +217,10 @@ export default class Popup {
     } else {
       this.overlay.disableInteractive();
     }
+  }
+
+  public addToContainer(obj: Phaser.GameObjects.GameObject) {
+    this.container.add(obj);
   }
 
   /* ---------------- new---------------------------- */

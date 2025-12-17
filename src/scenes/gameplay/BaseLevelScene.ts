@@ -9,6 +9,21 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     this.levelKey = key;
   }
 
+  /* ADD THIS CONSUMMATION OF CONFIG SOMEWHERE
+  export default class BaseLevelScene extends Phaser.Scene {
+  protected songConfig!: SongConfig;
+  protected partConfig!: PartConfig;
+
+  init(data: { songKey: string; partKey: string }) {
+    this.songConfig = SongRegistry[data.songKey];
+    this.partConfig = this.songConfig.parts[data.partKey];
+  }
+}
+  
+  
+  
+  */
+
   /** Child scenes MUST provide these before calling super.create() */
   protected abstract songMapKey: string;
   protected abstract visualTheme: {

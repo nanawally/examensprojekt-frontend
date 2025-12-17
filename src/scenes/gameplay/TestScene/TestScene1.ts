@@ -15,27 +15,58 @@ export default class TestScene1 extends BaseLevelScene {
   constructor() {
     super("TestScene1");
   }
-
+  
   preload(): void {
-    this.load.spritesheet("player", `/assets/spritesheets/boy_right_1024.png`, {
+    /* DYNAMIC PRELOADING FROM CONFIG
+    preload() {
+  this.load.spritesheet(
+    "player",
+    `src/assets/spritesheets/${this.partConfig.playerSprite}.png`,
+    { frameWidth: 1024, frameHeight: 1024 }
+  );
+
+  this.load.json(
+    "songMap",
+    `src/assets/songmaps/${this.partConfig.songMap}.json`
+  );
+
+  this.load.image("clouds", `src/assets/img/${this.songConfig.background.clouds}.png`);
+  this.load.image("bricks", `src/assets/img/${this.songConfig.background.bricks}.png`);
+}
+    preload() {
+  const song = this.songConfig;
+  const part = this.partConfig;
+
+  this.load.json("songMeta", `songs/${song.key}/song.json`);
+  this.load.json("songMap", `songs/${song.key}/${part.mapFile}`);
+
+  this.load.spritesheet("player", part.spritePath, { ... });
+  this.load.image("clouds", song.background.clouds);
+}
+    
+    
+    */
+    
+
+    this.load.spritesheet("player", `src/assets/spritesheets/boy_right_1024.png`, {
       frameWidth: 1024,
       frameHeight: 1024,
     });
-
+    
     this.load.spritesheet(
       "musicnote",
-      `/assets/spritesheets/music-notes_512.png`,
+      `src/assets/spritesheets/music-notes_512.png`,
       {
         frameWidth: 256,
         frameHeight: 256,
       }
     );
 
-    this.load.json("testsongMap", "/assets/songmaps/testsong.json");
+    this.load.json("testsongMap", "src/assets/songmaps/testsong.json");
 
-    this.load.image("clouds-white", "/assets/img/clouds-white.png");
-    this.load.image("clouds-white-small", "/assets/img/clouds-white-small.png");
-    this.load.image("bricks", "/assets/img/bricks.png");
+    this.load.image("clouds-white", "src/assets/img/clouds-white.png");
+    this.load.image("clouds-white-small", "src/assets/img/clouds-white-small.png");
+    this.load.image("bricks", "src/assets/img/bricks.png");
   }
 
   protected onCreateComplete(): void {

@@ -172,7 +172,7 @@ export default class StartMenuScene extends Phaser.Scene {
         this.popPopup();
       }
     );
-    
+
     this.pushPopup(popup);
   }
 
@@ -183,20 +183,22 @@ export default class StartMenuScene extends Phaser.Scene {
   private openPartSelectPopup(level: { key: string; name: string }) {
     const { width, height } = this.scale;
 
-    const buttons = [
+    /*const buttons = [
       new UIButton(this, "Start Level", width * 0.35, 60, () => {
         this.clearPopups();
         this.scene.start(level.key);
       }),
-    ];
+    ];*/
 
     const popup = new Popup(
       this,
       width,
       height,
       "Select Part",
-      `Choose a part for ${level.name}`,
-      buttons,
+      "",
+      //`Choose a part for ${level.name}`,
+      //buttons,
+      [],
       () => {
         this.popPopup(); // only closes this popup
       },
@@ -205,7 +207,44 @@ export default class StartMenuScene extends Phaser.Scene {
       }
     );
 
+    //------------------------------------------------------------------
+    const imgSpacing = 50; // space between the images
+    const imgY = 50; // vertical offset from title/content
+
+    const img1 = this.add
+      .image(-popup.popupWidth / 4 - imgSpacing / 2, imgY, "boy_right_1024")
+      .setOrigin(0.5)
+      .setInteractive()
+      .on("pointerdown", () => {
+        this.clearPopups();
+        this.scene.start(level.key); // replace with desired behavior
+      });
+    
+    const img2 = this.add
+      .image(popup.popupWidth / 4 + imgSpacing / 2, imgY, "part2")
+      .setOrigin(0.5)
+      .setInteractive()
+      .on("pointerdown", () => {
+        this.clearPopups();
+        this.scene.start(level.key); // replace with desired behavior
+      });
+
+    // Add images to the popup's container so they move/scale with it
+    popup.addToContainer(img1);
+    popup.addToContainer(img2);
+
+    //------------------------------------------------------------------
+
     this.pushPopup(popup);
+
+    //------------------------------------------------------------------
+    /*.on("pointerdown", () => {
+  this.scene.start(level.key, {
+    songKey: level.key,
+    partKey: "soprano",
+  });
+});
+ */
   }
 
   // ============================================================
