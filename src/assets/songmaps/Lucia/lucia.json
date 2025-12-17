@@ -1,0 +1,12 @@
+{
+  "key": "lucia",
+  "bpm": 120,
+  "background": {
+    "clouds": "clouds-white",
+    "bricks": "bricks"
+  },
+  "parts": {
+    "soprano": "soprano.json",
+    "alto": "alto.json"
+  }
+}
