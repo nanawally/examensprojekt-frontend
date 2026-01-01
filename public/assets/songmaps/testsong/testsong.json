@@ -1,12 +1,13 @@
 {
-  "key": "lucia",
-  "bpm": 110,
+  "key": "test-song",
+  "bpm": 120,
   "background": {
     "clouds": "clouds-white",
     "bricks": "bricks"
   },
   "parts": {
     "soprano": "soprano.json",
-    "alto": "alto.json"
+    "alto": "alto.json",
+    "tenor": "tenor.json"
   }
 }

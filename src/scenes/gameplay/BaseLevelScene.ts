@@ -34,6 +34,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   private levelKey!: string;
   protected player!: PlayerSprite;
   protected musicNotes!: Phaser.GameObjects.Group;
+  protected abstract createBackground(): void;
   protected ground!: Phaser.Physics.Arcade.Sprite;
   private baseScreenHeight = 1080;
 
@@ -51,7 +52,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
         this.visualTheme.playerSpriteKey,
         {
           start: 0,
-          end: 1,
+          end: 3, // amount of animation frames (-1)
         }
       ),
       frameRate: 4,
@@ -66,6 +67,12 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     });
 
     // -----------------------------
+    // COMMON: BACKGROUND
+    // (child creates ground + tiles here)
+    // -----------------------------
+    this.createBackground();
+
+    // -----------------------------
     // COMMON: create PlayerSprite
     // (scene-specific assets already loaded in child preload)
     // -----------------------------
@@ -75,8 +82,21 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
       gravity: 1800 * scaleFactor, // incease = lower jumps, decrease = higher jumps
     };
 
-    this.player = new PlayerSprite(this, width / 4, height * 0.5, playerConfig);
+    //this.player = new PlayerSprite(this, width / 4, height * 0.5, playerConfig);
+    //this.player.setDepth(10);
+
+    if (!this.ground) {
+      console.warn("Ground not yet created before player spawn!");
+      return;
+    }
+
+    // Spawn player slightly above the ground so physics resolves collision naturally
+    const spawnY = this.ground.getBounds().top - 2; // 2px buffer above ground
+    this.player = new PlayerSprite(this, width / 6, spawnY, playerConfig);
     this.player.setDepth(10);
+
+    // Add collider immediately
+    this.physics.add.collider(this.player, this.ground);
 
     // -----------------------------
     // COMMON: jump input
@@ -101,7 +121,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     // Allow child scene to finish setup
     // backgrounds, ground, cameras, etc.
     // -----------------------------
-    this.onCreateComplete();
+    //this.onCreateComplete();
 
     this.createScoreDisplay();
 
@@ -134,10 +154,23 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     if (!this.ground || !this.player.body) return;
 
     const groundTop = this.ground.getBounds().top;
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+
+    if (body) {
+      // Align the bottom of the physics body with the top of the ground
+      body.y = groundTop - body.height;
+
+      // Move the sprite so it matches the body (takes origin into account)
+      this.player.y = body.y + body.height * (1 - this.player.originY);
+    }
+
+    /*if (!this.ground || !this.player.body) return;
+    
+    const groundTop = this.ground.getBounds().top;
 
     // Place player's feet exactly on ground top
     this.player.y = groundTop;
-    this.player.body.updateFromGameObject();
+    this.player.body.updateFromGameObject();*/
   }
 
   // =====================================================

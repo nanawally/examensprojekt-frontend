@@ -3,6 +3,7 @@ import Phaser from "phaser";
 import TestScene1 from "./scenes/gameplay/TestScene/TestScene1";
 import StartMenuScene from "./scenes/util/StartMenuScene";
 import EndMenuScene from "./scenes/util/EndMenuScene";
+import LuciaScene from "./scenes/gameplay/Lucia/LuciaScene";
 
 function App() {
   useEffect(() => {
@@ -12,8 +13,8 @@ function App() {
     (window as any).phaserGame = new Phaser.Game({
       type: Phaser.AUTO,
       parent: "phaser-container",
-      backgroundColor: "#5DACD8",
-      scene: [StartMenuScene, EndMenuScene, TestScene1],
+      //backgroundColor: "#5DACD8",
+      scene: [StartMenuScene, EndMenuScene, TestScene1, LuciaScene],
       scale: {
         mode: Phaser.Scale.RESIZE, // important for full-viewport responsiveness
         autoCenter: Phaser.Scale.CENTER_BOTH,

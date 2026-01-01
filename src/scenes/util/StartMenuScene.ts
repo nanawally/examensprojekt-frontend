@@ -143,7 +143,7 @@ export default class StartMenuScene extends Phaser.Scene {
 
     const levels = [
       { key: "TestScene1", name: "Test Song" },
-      { key: "Song2Scene", name: "Rock Beat" },
+      { key: "LuciaScene", name: "Lucia" },
       { key: "Song2Scene", name: "Epic Drop" },
       { key: "Song2Scene", name: "Neon Rush" },
       { key: "Song2Scene", name: "Drift King" },

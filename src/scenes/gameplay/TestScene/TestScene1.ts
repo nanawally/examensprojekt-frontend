@@ -11,7 +11,7 @@ export default class TestScene1 extends BaseLevelScene {
   private cloudsWhite!: Phaser.GameObjects.TileSprite;
   private cloudsWhiteSmall!: Phaser.GameObjects.TileSprite;
   private bricks!: Phaser.GameObjects.TileSprite;
-
+  
   constructor() {
     super("TestScene1");
   }
@@ -48,28 +48,28 @@ export default class TestScene1 extends BaseLevelScene {
     */
     
 
-    this.load.spritesheet("player", `src/assets/spritesheets/boy_right_1024.png`, {
+    this.load.spritesheet("player", `/assets/spritesheets/boy_right_1024.png`, {
       frameWidth: 1024,
       frameHeight: 1024,
     });
     
     this.load.spritesheet(
       "musicnote",
-      `src/assets/spritesheets/music-notes_512.png`,
+      `/assets/spritesheets/music-notes_512.png`,
       {
         frameWidth: 256,
         frameHeight: 256,
       }
     );
+    
+    this.load.json("testsongMap", "/assets/songmaps/testsong.json");
 
-    this.load.json("testsongMap", "src/assets/songmaps/testsong.json");
-
-    this.load.image("clouds-white", "src/assets/img/clouds-white.png");
-    this.load.image("clouds-white-small", "src/assets/img/clouds-white-small.png");
-    this.load.image("bricks", "src/assets/img/bricks.png");
+    this.load.image("clouds-white", "/assets/img/clouds-white.png");
+    this.load.image("clouds-white-small", "/assets/img/clouds-white-small.png");
+    this.load.image("bricks", "/assets/img/bricks.png");
   }
-
-  protected onCreateComplete(): void {
+  
+  protected createBackground(): void {
     const { width, height } = this.scale;
     super.onCreateComplete();
     this.score = 0; // Optional score reset
