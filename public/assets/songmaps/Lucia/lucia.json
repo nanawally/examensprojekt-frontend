@@ -2,7 +2,7 @@
   "key": "lucia",
   "bpm": 110,
   "background": {
-    "clouds": "clouds-white",
+    "sky": "snow-mountain",
     "bricks": "bricks"
   },
   "parts": {

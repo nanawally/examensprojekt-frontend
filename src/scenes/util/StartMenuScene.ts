@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import UIButton from "../../components/ui/UiButton";
 import Popup from "../../components/ui/Popup";
+import { SongRegistry } from "../../songconfig/songregistry";
+import type { SongConfig } from "../../songconfig/songconfig";
 
 export default class StartMenuScene extends Phaser.Scene {
   private uiContainer!: Phaser.GameObjects.Container;
@@ -14,6 +16,15 @@ export default class StartMenuScene extends Phaser.Scene {
 
   preload(): void {
     this.load.image("menu-bg", "/assets/img/menu-bg.png");
+
+    Object.values(SongRegistry).forEach((song) => {
+      Object.values(song.parts).forEach((part) => {
+        this.load.spritesheet(part.playerSpriteKey, part.playerSpritePath, {
+          frameWidth: 512,
+          frameHeight: 512,
+        });
+      });
+    });
   }
 
   create(): void {
@@ -141,7 +152,7 @@ export default class StartMenuScene extends Phaser.Scene {
   private openSongSelectPopup() {
     const { width, height } = this.scale;
 
-    const levels = [
+    /*const levels = [
       { key: "TestScene1", name: "Test Song" },
       { key: "LuciaScene", name: "Lucia" },
       { key: "Song2Scene", name: "Epic Drop" },
@@ -152,12 +163,19 @@ export default class StartMenuScene extends Phaser.Scene {
       { key: "Song2Scene", name: "Final Boss" },
       { key: "Song2Scene", name: "Victory Lap" },
     ];
-
+    
     // Create song buttons
     const songButtons: UIButton[] = levels.map(
       (level) =>
         new UIButton(this, level.name, width * 0.35, 60, () => {
           this.openPartSelectPopup(level);
+        })
+    );*/
+
+    const songButtons = Object.values(SongRegistry).map(
+      (song) =>
+        new UIButton(this, song.key.toUpperCase(), width * 0.35, 60, () => {
+          this.openPartSelectPopup(song);
         })
     );
 
@@ -180,71 +198,103 @@ export default class StartMenuScene extends Phaser.Scene {
   // POPUP: PART SELECT
   // ============================================================
 
-  private openPartSelectPopup(level: { key: string; name: string }) {
+  private openPartSelectPopup(song: SongConfig) {
     const { width, height } = this.scale;
 
-    /*const buttons = [
-      new UIButton(this, "Start Level", width * 0.35, 60, () => {
-        this.clearPopups();
-        this.scene.start(level.key);
-      }),
-    ];*/
+    const BUTTON_WIDTH = width * 0.2;
+    const BUTTON_HEIGHT = 150;
+    const GAP_X = 40;
+    const GAP_Y = 40;
+
+    const partButtons = Object.values(song.parts).map((part) => {
+      const btn = new UIButton(
+        this,
+        part.displayName,
+        BUTTON_WIDTH,
+        BUTTON_HEIGHT,
+        () => {
+          this.clearPopups();
+          this.scene.start(song.sceneKey, {
+            songKey: song.key,
+            partKey: part.key,
+          });
+        }
+      );
+
+      btn.remove(btn.text); // Remove default text
+
+      // Add thumbnail sprite to the button
+      const thumb = this.add
+        .sprite(0, -BUTTON_HEIGHT / 4 + 20, part.playerSpriteKey, 0) // 0 = first frame
+        .setOrigin(0.5);
+      thumb.setScale((BUTTON_HEIGHT * 0.65) / thumb.height);
+      btn.add(thumb);
+
+      // Add text below the sprite
+      const label = this.add
+        .text(
+          0,
+          thumb.displayHeight + 15 - BUTTON_HEIGHT / 2,
+          part.displayName,
+          {
+            fontSize: "24px",
+            color: "#ffffff",
+            fontFamily: "Arial",
+          }
+        )
+        .setOrigin(0.5, 0); // top-center
+      btn.add(label);
+
+      return btn;
+    });
 
     const popup = new Popup(
       this,
       width,
       height,
       "Select Part",
-      "",
-      //`Choose a part for ${level.name}`,
-      //buttons,
-      [],
-      () => {
-        this.popPopup(); // only closes this popup
-      },
-      {
-        showBackButton: true,
-      }
+      `Choose a part for ${song.key}`,
+      partButtons,
+      () => this.popPopup(),
+      { showBackButton: true }
     );
 
-    //------------------------------------------------------------------
-    const imgSpacing = 50; // space between the images
-    const imgY = 50; // vertical offset from title/content
+    // Arrange buttons in 2 columns, multiple rows
+    partButtons.forEach((btn, i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
 
-    const img1 = this.add
-      .image(-popup.popupWidth / 4 - imgSpacing / 2, imgY, "boy_right_1024")
-      .setOrigin(0.5)
-      .setInteractive()
-      .on("pointerdown", () => {
-        this.clearPopups();
-        this.scene.start(level.key); // replace with desired behavior
-      });
-    
-    const img2 = this.add
-      .image(popup.popupWidth / 4 + imgSpacing / 2, imgY, "part2")
-      .setOrigin(0.5)
-      .setInteractive()
-      .on("pointerdown", () => {
-        this.clearPopups();
-        this.scene.start(level.key); // replace with desired behavior
-      });
-
-    // Add images to the popup's container so they move/scale with it
-    popup.addToContainer(img1);
-    popup.addToContainer(img2);
-
-    //------------------------------------------------------------------
+      btn.x = col * (BUTTON_WIDTH + GAP_X) - (BUTTON_WIDTH + GAP_X) / 2;
+      btn.y = 150 + row * (BUTTON_HEIGHT + GAP_Y);
+    });
 
     this.pushPopup(popup);
 
-    //------------------------------------------------------------------
-    /*.on("pointerdown", () => {
-  this.scene.start(level.key, {
-    songKey: level.key,
-    partKey: "soprano",
-  });
-});
- */
+    /*
+    const partButtons = Object.values(song.parts).map(
+      (part) =>
+        new UIButton(this, part.displayName, width * 0.35, 60, () => {
+          this.clearPopups();
+          this.scene.start(song.sceneKey, {
+            songKey: song.key,
+            partKey: part.key,
+          });
+        })
+    );
+
+    const popup = new Popup(
+      this,
+      width,
+      height,
+      "Select Part",
+      `Choose a part for ${song.key}`,
+      partButtons,
+      () => this.popPopup(),
+      { showBackButton: true }
+    );
+
+    this.pushPopup(popup);
+    */
   }
 
   // ============================================================

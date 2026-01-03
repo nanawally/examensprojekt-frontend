@@ -2,34 +2,40 @@ import Phaser from "phaser";
 import PlayerSprite from "../../sprites/players/PlayerSprite";
 import type { PlayerConfig } from "../../sprites/players/PlayerSprite";
 import MusicNoteSprite from "../../sprites/items/MusicNoteSprite";
+import { SongRegistry } from "../../songconfig/songregistry";
+import type { SongConfig, PartConfig } from "../../songconfig/songconfig";
 
 export default abstract class BaseLevelScene extends Phaser.Scene {
+  protected songConfig!: SongConfig;
+  protected partConfig!: PartConfig;
+
   constructor(key: string) {
     super(key);
     this.levelKey = key;
   }
 
-  /* ADD THIS CONSUMMATION OF CONFIG SOMEWHERE
-  export default class BaseLevelScene extends Phaser.Scene {
-  protected songConfig!: SongConfig;
-  protected partConfig!: PartConfig;
-
   init(data: { songKey: string; partKey: string }) {
     this.songConfig = SongRegistry[data.songKey];
     this.partConfig = this.songConfig.parts[data.partKey];
+
+    if (!this.songConfig || !this.partConfig) {
+      throw new Error(
+        `Invalid song/part combination: ${data.songKey} / ${data.partKey}`
+      );
+    }
   }
-}
-  
-  
-  
-  */
 
   /** Child scenes MUST provide these before calling super.create() */
-  protected abstract songMapKey: string;
-  protected abstract visualTheme: {
-    playerSpriteKey: string;
-    playerWalkAnimKey: string;
-  };
+  protected get songMapKey(): string {
+    return this.partConfig.songMapKey;
+  }
+
+  protected get visualTheme() {
+    return {
+      playerSpriteKey: this.partConfig.playerSpriteKey,
+      playerWalkAnimKey: "walk",
+    };
+  }
 
   private levelKey!: string;
   protected player!: PlayerSprite;
