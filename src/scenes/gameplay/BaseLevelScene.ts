@@ -9,9 +9,12 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   protected songConfig!: SongConfig;
   protected partConfig!: PartConfig;
   protected musicTracks: Phaser.Sound.BaseSound[] = [];
+  protected musicTrackMap = new Map<string, Phaser.Sound.BaseSound>();
+  protected controlledTrack?: Phaser.Sound.BaseSound;
+  protected controlledTrackFaded = false;
   protected musicStartTimeMs = 0;
   protected readonly PRE_ROLL_MS = 1000;
-  
+
   constructor(key: string) {
     super(key);
     this.levelKey = key;
@@ -73,6 +76,10 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     // -----------------------------
     this.musicNotes = this.add.group({
       runChildUpdate: true,
+    });
+
+    this.events.on("note-missed", () => {
+      this.onNoteMissed();
     });
 
     // -----------------------------
@@ -144,6 +151,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
 
     this.physics.add.overlap(this.player, this.musicNotes, (_player, note) => {
       (note as MusicNoteSprite).collect();
+      this.onNoteHit();
       this.addScore(100); // if want combo: , this.addComboScore(100);
     });
 
@@ -215,22 +223,51 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
       const delay = spawnTimeMs - this.time.now;
 
       if (delay >= 0) {
-        // Normal spawn
         this.time.delayedCall(delay, () => {
+          // Normal spawn
           this.spawnMusicNote(note.lane, note.frame);
         });
       } else {
-        // Late note — spawn immediately, but shifted left
-        const latenessMs = -delay;
+        const latenessMs = -delay; // Late note — spawn immediately, but shifted left
         const xOffsetPx = (latenessMs / 1000) * speed;
-
+        
         this.spawnMusicNote(note.lane, note.frame, xOffsetPx);
       }
 
-      lastNoteTime = Math.max(lastNoteTime, note.time);
+      lastNoteTime = Math.max(lastNoteTime, hitTimeMs);
     });
+    
+    const extraDelay = 2000;
+    const now = this.time.now;
+    const delayMs = Math.max(0, lastNoteTime + extraDelay - now);
 
-    this.time.delayedCall(lastNoteTime + 1000, () => this.showEndMenu());
+    this.time.delayedCall(delayMs, () => this.showEndMenu());
+  }
+
+  protected onNoteMissed(): void {
+    if (!this.controlledTrack || this.controlledTrackFaded) return;
+
+    this.controlledTrackFaded = true;
+
+    this.tweens.add({
+      targets: this.controlledTrack,
+      volume: 0,
+      duration: 300,
+      ease: "Linear",
+    });
+  }
+
+  protected onNoteHit(): void {
+    if (!this.controlledTrack || !this.controlledTrackFaded) return;
+
+    this.controlledTrackFaded = false;
+
+    this.tweens.add({
+      targets: this.controlledTrack,
+      volume: 1,
+      duration: 150,
+      ease: "Linear",
+    });
   }
 
   // -----------------------------

@@ -17,6 +17,7 @@ export const SongRegistry: Record<string, SongConfig> = {
         songMapKey: "lucia_soprano",
         playerSpriteKey: "lucia_soprano_player",
         playerSpritePath: "/assets/spritesheets/lucia/lucia_soprano_512.png",
+        controlledTrackKey: "lucia-sop",
       },
       alto: {
         key: "alto",
@@ -24,6 +25,7 @@ export const SongRegistry: Record<string, SongConfig> = {
         songMapKey: "lucia_alto",
         playerSpriteKey: "lucia_alto_player",
         playerSpritePath: "/assets/spritesheets/lucia/lucia_alto_512.png",
+        controlledTrackKey: "lucia-alt",
       },
     },
   },
@@ -43,6 +45,7 @@ export const SongRegistry: Record<string, SongConfig> = {
         songMapKey: "lucia_soprano",
         playerSpriteKey: "lucia_soprano_player",
         playerSpritePath: "/assets/spritesheets/lucia/lucia_soprano_512.png",
+        controlledTrackKey: "lucia-sop",
       },
       alto: {
         key: "alto",
@@ -50,6 +53,7 @@ export const SongRegistry: Record<string, SongConfig> = {
         songMapKey: "lucia_alto",
         playerSpriteKey: "lucia_alto_player",
         playerSpritePath: "/assets/spritesheets/lucia/lucia_alto_512.png",
+        controlledTrackKey: "lucia-sop",
       },
     },
   },

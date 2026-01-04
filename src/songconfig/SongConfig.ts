@@ -4,6 +4,7 @@ export interface PartConfig {
   songMapKey: string;
   playerSpriteKey: string;
   playerSpritePath: string;
+  controlledTrackKey: string;
 }
 
 export interface SongConfig {

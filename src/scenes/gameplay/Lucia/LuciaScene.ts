@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import BaseLevelScene from "../BaseLevelScene";
+import type MusicNoteSprite from "../../../sprites/items/MusicNoteSprite";
 
 export default class LuciaScene extends BaseLevelScene {
   private snowMountain!: Phaser.GameObjects.TileSprite;
@@ -78,12 +79,17 @@ export default class LuciaScene extends BaseLevelScene {
   }
 
   update(): void {
-    console.log("LuciaScene update running");
     if (this.snowMountain) {
       this.snowMountain.tilePositionX += 0.5;
     }
     if (this.bricks) {
       this.bricks.tilePositionX += 1; // scroll bricks faster than mountains
+    }
+    
+    if (this.musicNotes && this.player) {
+      this.musicNotes.getChildren().forEach((note: any) => {
+        (note as MusicNoteSprite).update(this.player.x);
+      });
     }
   }
 
@@ -104,6 +110,13 @@ export default class LuciaScene extends BaseLevelScene {
 
       this.sop.play();
       this.alt.play();
+
+      this.musicTrackMap.set("lucia-sop", this.sop);
+      this.musicTrackMap.set("lucia-alt", this.alt);
+
+      this.controlledTrack = this.musicTrackMap.get(
+        this.partConfig.controlledTrackKey
+      );
 
       this.musicTracks.push(this.sop, this.alt);
     });
