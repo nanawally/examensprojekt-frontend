@@ -8,7 +8,10 @@ import type { SongConfig, PartConfig } from "../../songconfig/songconfig";
 export default abstract class BaseLevelScene extends Phaser.Scene {
   protected songConfig!: SongConfig;
   protected partConfig!: PartConfig;
-
+  protected musicTracks: Phaser.Sound.BaseSound[] = [];
+  protected musicStartTimeMs = 0;
+  protected readonly PRE_ROLL_MS = 1000;
+  
   constructor(key: string) {
     super(key);
     this.levelKey = key;
@@ -88,9 +91,6 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
       gravity: 1800 * scaleFactor, // incease = lower jumps, decrease = higher jumps
     };
 
-    //this.player = new PlayerSprite(this, width / 4, height * 0.5, playerConfig);
-    //this.player.setDepth(10);
-
     if (!this.ground) {
       console.warn("Ground not yet created before player spawn!");
       return;
@@ -117,6 +117,11 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     });
 
     // -----------------------------
+    // COMMON: start music
+    // -----------------------------
+    this.startMusic();
+
+    // -----------------------------
     // COMMON: schedule notes
     // songMap was preloaded by the child scene
     // -----------------------------
@@ -127,7 +132,6 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     // Allow child scene to finish setup
     // backgrounds, ground, cameras, etc.
     // -----------------------------
-    //this.onCreateComplete();
 
     this.createScoreDisplay();
 
@@ -156,6 +160,10 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   // -----------------------------
   protected onCreateComplete(): void {}
 
+  protected startMusic(): void {
+    // default: do nothing
+  }
+
   protected positionPlayerOnGround(): void {
     if (!this.ground || !this.player.body) return;
 
@@ -169,22 +177,20 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
       // Move the sprite so it matches the body (takes origin into account)
       this.player.y = body.y + body.height * (1 - this.player.originY);
     }
-
-    /*if (!this.ground || !this.player.body) return;
-    
-    const groundTop = this.ground.getBounds().top;
-
-    // Place player's feet exactly on ground top
-    this.player.y = groundTop;
-    this.player.body.updateFromGameObject();*/
   }
 
   // =====================================================
   //                  NOTE SPAWN LOGIC
   // =====================================================
 
-  protected spawnMusicNote(lane: number, frame: number): void {
-    const x = this.scale.width + 50;
+  protected spawnMusicNote(
+    lane: number,
+    frame: number,
+    xOffsetPx: number = 0
+  ): void {
+    const baseX = this.scale.width + 50;
+    const x = baseX - xOffsetPx;
+
     const yPositions = [100, 200, 300, 400];
     const y = yPositions[lane - 1];
 
@@ -194,27 +200,39 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   }
 
   protected scheduleNotesFromMap(songMap: any) {
-    const distanceToHitLine = 600; // px
     const speed = 200; // px/s
-    const travelTime = (distanceToHitLine / speed) * 1000; // ms
+
+    const spawnX = this.scale.width + 50;
+    const hitX = this.player.x;
+    const distance = spawnX - hitX;
+    const travelTimeMs = (distance / speed) * 1000;
 
     let lastNoteTime = 0;
 
     songMap.notes.forEach((note: any) => {
-      const spawnTime = note.time - travelTime;
+      const hitTimeMs = this.musicStartTimeMs + note.time;
+      const spawnTimeMs = hitTimeMs - travelTimeMs;
+      const delay = spawnTimeMs - this.time.now;
 
-      if (spawnTime >= 0) {
-        this.time.delayedCall(spawnTime, () =>
-          this.spawnMusicNote(note.lane, note.frame)
-        );
+      if (delay >= 0) {
+        // Normal spawn
+        this.time.delayedCall(delay, () => {
+          this.spawnMusicNote(note.lane, note.frame);
+        });
+      } else {
+        // Late note — spawn immediately, but shifted left
+        const latenessMs = -delay;
+        const xOffsetPx = (latenessMs / 1000) * speed;
 
-        if (note.time > lastNoteTime) lastNoteTime = note.time;
+        this.spawnMusicNote(note.lane, note.frame, xOffsetPx);
       }
+
+      lastNoteTime = Math.max(lastNoteTime, note.time);
     });
 
-    const endDelay = lastNoteTime + travelTime;
-    this.time.delayedCall(endDelay, () => this.showEndMenu());
+    this.time.delayedCall(lastNoteTime + 1000, () => this.showEndMenu());
   }
+
   // -----------------------------
   // COMMON resize logic
   // -----------------------------
