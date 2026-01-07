@@ -195,7 +195,7 @@ export default class Popup {
       this.scroll(p.y - lastY);
       lastY = p.y;
     });
-
+    
     this.wheelHandler = (_p: any, _dx: any, dy: number) => {
       this.scroll(-dy * 0.4);
     };
