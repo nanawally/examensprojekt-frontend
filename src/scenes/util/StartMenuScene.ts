@@ -16,6 +16,10 @@ export default class StartMenuScene extends Phaser.Scene {
 
   preload(): void {
     this.load.image("menu-bg", "/assets/img/menu-bg-purple-grid.png");
+    this.load.image("start-button", "/assets/img/start-button.png");
+    this.load.image("instructions-button", "/assets/img/instructions-button.png");
+    this.load.image("scoring-button", "/assets/img/scoring-button.png");
+    this.load.image("socials-button", "/assets/img/socials-button.png");
 
     Object.values(SongRegistry).forEach((song) => {
       Object.values(song.parts).forEach((part) => {
