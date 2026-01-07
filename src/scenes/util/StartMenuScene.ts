@@ -17,6 +17,7 @@ export default class StartMenuScene extends Phaser.Scene {
 
   preload(): void {
     this.load.image("menu-bg", "/assets/img/menu-bg-purple-grid.png");
+    this.load.image("title-graphic", "/assets/img/title-graphic.png");
     this.load.image("start-button", "/assets/img/start-button.png");
     this.load.image(
       "instructions-button",
@@ -53,7 +54,7 @@ export default class StartMenuScene extends Phaser.Scene {
     this.uiContainer = this.add.container(width / 2, height / 2);
 
     // Title
-    const title = this.add
+    /*const title = this.add
       .text(0, -200, "Music Runner", {
         fontSize: "64px",
         fontFamily: "Arial",
@@ -61,7 +62,12 @@ export default class StartMenuScene extends Phaser.Scene {
         stroke: "#000000",
         strokeThickness: 6,
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5);*/
+
+    const title = this.add.image(0, -200, "title-graphic").setOrigin(0.5);
+
+    title.setScale(110 / title.height);
+    this.uiContainer.add(title);
 
     // --------------------------------------------
     // BUTTONS
@@ -105,10 +111,11 @@ export default class StartMenuScene extends Phaser.Scene {
         this.openInfoPopup(
           "Instructions",
           [
-            "• Use arrow keys to move",
-            "• Avoid obstacles",
-            "• Collect points",
-            "• Enjoy the music",
+            "• Click to jump",
+            "• Collect musical notes to score points",
+            "• If you miss a note, the part you play will go quiet",
+            "• Collect musical notes to restore the music",
+            "• Each note is worth 100 points",
           ].join("\n")
         );
       }
@@ -136,13 +143,13 @@ export default class StartMenuScene extends Phaser.Scene {
         "Scoring",
         [
           "Every 12 hours:",
-          "Leaderboard for the past 12 hours resets.",
+          "Every 12 hours, the top 3 scores are moved to the '1 Week' leaderboard, and this leaderboard is reset. All scores are also moved to the All-Time Leaderboard. Players cannot be duplicate; your score will be updated if you achieve a higher score.",
           "",
-          "Every 24 hours:",
-          "Leaderboard info woo!",
+          "Every week:",
+          "Every week, a random player on this leaderboard will be sent an email with a special reward code for an upcoming concert. This leaderboard is then reset. Players can be duplicate on this leaderboard to increase their chances of winning.",
           "",
           "All Time:",
-          "Highest scores ever achieved are recorded here.",
+          "Each player's highest score ever achieved is recorded here. This leaderboard is never reset.",
         ].join("\n")
       );
     });
@@ -167,7 +174,7 @@ export default class StartMenuScene extends Phaser.Scene {
         );
       }
     );*/
-    
+
     const socialBtn = new ImgButton(this, 0, 0, "socials-button", () => {
       window.open(
         "https://linktr.ee/NoNSEnsSpex?utm_source=linktree_profile_share&ltsid=84c07043-7b55-49c4-be04-c9aa0b8fbec1",
@@ -186,12 +193,12 @@ export default class StartMenuScene extends Phaser.Scene {
         );
       }
     );*/
-    
+
     const buttons = [startBtn, instructionsBtn, scoringBtn, socialBtn];
 
     // Stack buttons vertically under title
     this.stackVertically(buttons, -100, BUTTON_HEIGHT + GAP);
-    
+
     this.uiContainer.add([title, ...buttons]);
 
     // --------------------------------------------
@@ -231,7 +238,15 @@ export default class StartMenuScene extends Phaser.Scene {
     <form style="display:flex;flex-direction:column;gap:12px;width:300px">
       <input name="email" type="email" placeholder="Email" />
       <input name="name" type="text" placeholder="Leaderboard Name" />
-      <button type="button" name="submit">Continue</button>
+      <button type="button" name="submit" style="
+        background-color:#E8C1FA;
+        color:#000;
+        border:none;
+        padding:10px;
+        font-size:16px;
+        border-radius:6px;
+        cursor:pointer;
+      ">Continue</button>
     </form>
   `);
 
@@ -264,7 +279,8 @@ export default class StartMenuScene extends Phaser.Scene {
 
     const songButtons = Object.values(SongRegistry).map(
       (song) =>
-        new UIButton(this, song.key.toUpperCase(), width * 0.35, 60, () => {
+        new UIButton(this, song.displayName, width * 0.35, 60, () => {
+          //song.key.toUpperCase()
           this.openPartSelectPopup(song);
         })
     );
