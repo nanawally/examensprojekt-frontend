@@ -9,13 +9,13 @@ export default class StartMenuScene extends Phaser.Scene {
   private popupContainer: Popup | null = null;
   private popupStack: Popup[] = []; // stack popups for song select and part select
   private resizeHandler?: (size: Phaser.Structs.Size) => void;
-
+  
   constructor() {
     super({ key: "StartMenuScene" });
   }
 
   preload(): void {
-    this.load.image("menu-bg", "/assets/img/menu-bg.png");
+    this.load.image("menu-bg", "/assets/img/menu-bg-purple-grid.png");
 
     Object.values(SongRegistry).forEach((song) => {
       Object.values(song.parts).forEach((part) => {

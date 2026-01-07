@@ -1,13 +1,12 @@
 import Phaser from "phaser";
 import BaseLevelScene from "../BaseLevelScene";
-import type MusicNoteSprite from "../../../sprites/items/MusicNoteSprite";
 
 export default class LuciaScene extends BaseLevelScene {
   private snowMountain!: Phaser.GameObjects.TileSprite;
   private iceGround!: Phaser.GameObjects.TileSprite;
   private sop!: Phaser.Sound.BaseSound;
   private alt!: Phaser.Sound.BaseSound;
-  
+
   constructor() {
     super("LuciaScene");
   }
@@ -46,17 +45,17 @@ export default class LuciaScene extends BaseLevelScene {
 
     this.snowMountain = this.add.tileSprite(
       width / 2,
-      height * (2 / 6),
+      (height * 3) / 8,
       width,
-      height * (2 / 3),
+      (height * 3) / 4,
       this.songConfig.background.sky
     );
 
     this.iceGround = this.add.tileSprite(
       width / 2,
-      height - height / 3 / 2,
+      (height * 7) / 8,
       width,
-      height / 3,
+      height / 4,
       this.songConfig.background.ground
     );
 
@@ -67,14 +66,17 @@ export default class LuciaScene extends BaseLevelScene {
     );
 
     const groundImg = this.textures.get("ice-ground").getSourceImage();
-    this.ground.setScale(width / groundImg.width, height / 6 / groundImg.height);
+    this.ground.setScale(
+      width / groundImg.width,
+      height / 6 / groundImg.height
+    );
     this.ground.refreshBody();
     this.ground.setVisible(false); //invisible, only used for collision
 
     this.snowMountain.setDepth(-10);
     this.iceGround.setDepth(-5);
     this.ground.setDepth(-1);
-    
+
     this.updateCamera();
   }
 
@@ -92,7 +94,7 @@ export default class LuciaScene extends BaseLevelScene {
       });
     }*/
   }
-  
+
   private updateCamera(): void {
     const camera = this.cameras?.main;
 
@@ -129,7 +131,7 @@ export default class LuciaScene extends BaseLevelScene {
     const height = this.scale.height;
 
     this.updateCamera();
-    
+
     if (this.snowMountain) {
       this.snowMountain.setSize(width, height);
     }

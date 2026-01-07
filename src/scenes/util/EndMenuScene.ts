@@ -16,7 +16,7 @@ export default class EndMenuScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.image("endmenu-bg", "/assets/img/menu-bg.png");
+    this.load.image("endmenu-bg", "/assets/img/menu-bg-purple-grid.png");
     this.load.image("replay-button", "/assets/img/replay-button.png");
     this.load.image("mainmenu-button", "/assets/img/start-button.png");
   }
