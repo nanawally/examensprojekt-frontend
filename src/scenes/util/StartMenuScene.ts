@@ -9,7 +9,7 @@ export default class StartMenuScene extends Phaser.Scene {
   private popupContainer: Popup | null = null;
   private popupStack: Popup[] = []; // stack popups for song select and part select
   private resizeHandler?: (size: Phaser.Structs.Size) => void;
-  
+
   constructor() {
     super({ key: "StartMenuScene" });
   }
@@ -125,8 +125,10 @@ export default class StartMenuScene extends Phaser.Scene {
       BUTTON_WIDTH,
       BUTTON_HEIGHT,
       () => {
-        window.location.href =
-          "https://linktr.ee/NoNSEnsSpex?utm_source=linktree_profile_share&ltsid=84c07043-7b55-49c4-be04-c9aa0b8fbec1";
+        window.open(
+          "https://linktr.ee/NoNSEnsSpex?utm_source=linktree_profile_share&ltsid=84c07043-7b55-49c4-be04-c9aa0b8fbec1",
+          "_blank"
+        );
       }
     );
 
