@@ -42,15 +42,8 @@ export default class Popup {
     // -------------------------------------------------
     // OVERLAY (dark background behind popup)
     // -------------------------------------------------
-
-    /*this.overlay = scene.add
-      .rectangle(width / 2, height / 2, width, height, 0x000000, 0.6)
-      .setOrigin(0.5)
-      .setInteractive()
-      .setDepth(100);*/
-
     this.overlay = scene.add
-      .rectangle(width / 2, height / 2, width, height, 0x000000, 0.6)
+      .rectangle(width / 2, height / 2, width, height, 0xE8C1FA, 0.6)
       .setOrigin(0.5)
       .setDepth(100)
       .setInteractive({ hitAreaCallback: () => false });
@@ -67,7 +60,7 @@ export default class Popup {
     // -------------------------------------------------
 
     const bg = scene.add
-      .rectangle(0, 0, popupWidth, popupHeight, 0x222222, 1)
+      .rectangle(0, 0, popupWidth, popupHeight, 0x6F33AB, 1) // 542782
       .setStrokeStyle(4, 0xffffff)
       .setOrigin(0.5);
 
@@ -82,6 +75,8 @@ export default class Popup {
       .text(0, -popupHeight / 2 + 50, titleText, {
         fontSize: "48px",
         color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 2,
         fontFamily: "Arial",
       })
       .setOrigin(0.5);
@@ -100,7 +95,9 @@ export default class Popup {
     const content = scene.add
       .text(0, contentY, contentText, {
         fontSize: "28px",
-        color: "#dddddd",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 2,
         fontFamily: "Arial",
         align: "center",
         wordWrap: { width: popupWidth - 80 },
