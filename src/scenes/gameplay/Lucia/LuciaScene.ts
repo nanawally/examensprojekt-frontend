@@ -4,10 +4,10 @@ import type MusicNoteSprite from "../../../sprites/items/MusicNoteSprite";
 
 export default class LuciaScene extends BaseLevelScene {
   private snowMountain!: Phaser.GameObjects.TileSprite;
-  private bricks!: Phaser.GameObjects.TileSprite;
+  private iceGround!: Phaser.GameObjects.TileSprite;
   private sop!: Phaser.Sound.BaseSound;
   private alt!: Phaser.Sound.BaseSound;
-
+  
   constructor() {
     super("LuciaScene");
   }
@@ -52,7 +52,7 @@ export default class LuciaScene extends BaseLevelScene {
       this.songConfig.background.sky
     );
 
-    this.bricks = this.add.tileSprite(
+    this.iceGround = this.add.tileSprite(
       width / 2,
       height - height / 3 / 2,
       width,
@@ -66,15 +66,15 @@ export default class LuciaScene extends BaseLevelScene {
       this.songConfig.background.ground
     );
 
-    const brickImg = this.textures.get("bricks").getSourceImage();
-    this.ground.setScale(width / brickImg.width, height / 6 / brickImg.height);
+    const groundImg = this.textures.get("ice-ground").getSourceImage();
+    this.ground.setScale(width / groundImg.width, height / 6 / groundImg.height);
     this.ground.refreshBody();
     this.ground.setVisible(false); //invisible, only used for collision
 
     this.snowMountain.setDepth(-10);
-    this.bricks.setDepth(-5);
+    this.iceGround.setDepth(-5);
     this.ground.setDepth(-1);
-
+    
     this.updateCamera();
   }
 
@@ -82,8 +82,8 @@ export default class LuciaScene extends BaseLevelScene {
     if (this.snowMountain) {
       this.snowMountain.tilePositionX += 0.5;
     }
-    if (this.bricks) {
-      this.bricks.tilePositionX += 1; // scroll bricks faster than mountains
+    if (this.iceGround) {
+      this.iceGround.tilePositionX += 1; // scroll iceGround faster than mountains
     }
 
     /*if (this.musicNotes && this.player) {
@@ -129,14 +129,14 @@ export default class LuciaScene extends BaseLevelScene {
     const height = this.scale.height;
 
     this.updateCamera();
-
+    
     if (this.snowMountain) {
       this.snowMountain.setSize(width, height);
     }
 
-    if (this.bricks) {
-      this.bricks.setSize(width, height / 3);
-      this.bricks.setPosition(width / 2, height - height / 3 / 2);
+    if (this.iceGround) {
+      this.iceGround.setSize(width, height / 3);
+      this.iceGround.setPosition(width / 2, height - height / 3 / 2);
     }
 
     if (this.ground && this.ground.body) {

@@ -8,7 +8,7 @@ export const SongRegistry: Record<string, SongConfig> = {
     bpm: 110,
     background: {
       sky: "snow-mountain",
-      ground: "bricks",
+      ground: "ice-ground",
     },
     parts: {
       soprano: {
@@ -36,7 +36,7 @@ export const SongRegistry: Record<string, SongConfig> = {
     bpm: 110,
     background: {
       sky: "snow-mountain",
-      ground: "bricks",
+      ground: "ice-ground",
     },
     parts: {
       soprano: {
