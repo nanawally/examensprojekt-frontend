@@ -53,17 +53,7 @@ export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
   // -------------------------------
   // Update
   // -------------------------------
-  /*update(): void {
-    if (this.x < -this.width) {
-      this.destroy();
-    }
-    
-    if (this.x < -50 && !this.collect) {
-      this.scene.events.emit("note-missed");
-      this.destroy();
-    }
-  }*/
-  update(x: number): void {
+  update(): void {
     if (this.collected || this.missed) return;
 
     const player = (this.scene as any).player as Phaser.Physics.Arcade.Sprite;
@@ -71,7 +61,10 @@ export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
     if ((player && this.x < player.x) || this.x < -50) {
       this.missed = true;
       this.scene.events.emit("note-missed", this);
-      this.destroy();
+      // Destroy after 2 seconds
+      this.scene.time.delayedCall(2000, () => {
+        this.destroy();
+      });
     }
   }
 
@@ -80,8 +73,14 @@ export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
   // -------------------------------
   collect(): void {
     if (this.collected || this.missed) return;
+
     this.collected = true;
-    this.scene.events.emit("note-hit", this);
+    this.scene.events.emit("note-hit", {
+      timeMs: this.spawnTimeMs,
+      lane: this.lane,
+      type: "HIT",
+    });
+
     this.destroy();
   }
 }

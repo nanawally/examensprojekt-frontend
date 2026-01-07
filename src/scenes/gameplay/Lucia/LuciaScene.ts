@@ -85,16 +85,18 @@ export default class LuciaScene extends BaseLevelScene {
     if (this.bricks) {
       this.bricks.tilePositionX += 1; // scroll bricks faster than mountains
     }
-    
-    if (this.musicNotes && this.player) {
-      this.musicNotes.getChildren().forEach((note: any) => {
-        (note as MusicNoteSprite).update(this.player.x);
-      });
-    }
-  }
 
+    /*if (this.musicNotes && this.player) {
+      this.musicNotes.getChildren().forEach((note: any) => {
+        (note as MusicNoteSprite).update();
+      });
+    }*/
+  }
+  
   private updateCamera(): void {
-    const camera = this.cameras.main;
+    const camera = this.cameras?.main;
+
+    if (!camera) return;
 
     camera.setViewport(0, 0, this.scale.width, this.scale.height);
     camera.setZoom(1);
@@ -137,7 +139,7 @@ export default class LuciaScene extends BaseLevelScene {
       this.bricks.setPosition(width / 2, height - height / 3 / 2);
     }
 
-    if (this.ground) {
+    if (this.ground && this.ground.body) {
       const brickImg = this.textures.get("bricks").getSourceImage();
       this.ground.setScale(
         width / brickImg.width,

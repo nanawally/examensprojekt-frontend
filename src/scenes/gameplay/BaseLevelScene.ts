@@ -16,7 +16,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   protected controlledTrackFaded = false;
   protected musicStartTimeMs = 0;
   protected readonly PRE_ROLL_MS = 1000;
-  
+
   constructor(key: string) {
     super(key);
     this.levelKey = key;
@@ -81,9 +81,24 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
       runChildUpdate: true,
     });
 
-    this.events.on("note-missed", () => {
-      this.onNoteMissed();
-    });
+    this.runEvents = [];
+    
+    this.events.on(
+      "note-hit",
+      (event: { timeMs: number; lane: number; type: "HIT" | "MISS" }) => {
+        this.runEvents.push(event);
+        this.onNoteHit();
+        this.addScore(100); // if want combo: , this.addComboScore(100);
+      }
+    );
+
+    this.events.on(
+      "note-missed",
+      (event: { timeMs: number; lane: number; type: "HIT" | "MISS" }) => {
+        this.runEvents.push(event);
+        this.onNoteMissed();
+      }
+    );
 
     // -----------------------------
     // COMMON: BACKGROUND
@@ -154,8 +169,6 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
 
     this.physics.add.overlap(this.player, this.musicNotes, (_player, note) => {
       (note as MusicNoteSprite).collect();
-      this.onNoteHit();
-      this.addScore(100); // if want combo: , this.addComboScore(100);
     });
 
     this.positionPlayerOnGround();
@@ -208,14 +221,10 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
 
     const actualSpawnTime = spawnTimeMs ?? Date.now();
 
-    const note = new MusicNoteSprite(
-      this,
-      x,
-      y,
-      lane,
-      actualSpawnTime,
-      frame
-    );
+    const note = new MusicNoteSprite(this, x, y, lane, actualSpawnTime, frame);
+    const body = note.body as Phaser.Physics.Arcade.Body;
+    body.setVelocityX(-200);
+    body.enable = true;
 
     note.setDepth(20);
 
@@ -334,33 +343,14 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   // -----------------------------
   // SEND DATA TO BACKEND
   // -----------------------------
-  protected collectRunEvents(): Array<{
+  protected runEvents: Array<{
     timeMs: number;
     lane: number;
-    type: string;
-  }> {
-    const events: Array<{ timeMs: number; lane: number; type: string }> = [];
+    type: "HIT" | "MISS";
+  }> = [];
 
-    // Iterate over all music notes
-    this.musicNotes.getChildren().forEach((noteObj) => {
-      const note = noteObj as MusicNoteSprite;
-
-      if (!note.spawnTimeMs || !note.lane) return;
-
-      // Determine event type
-      const eventType = note.collected ? "HIT" : "MISS";
-
-      events.push({
-        timeMs: note.spawnTimeMs,
-        lane: note.lane,
-        type: eventType,
-      });
-    });
-
-    // Sort events by time, just in case
-    events.sort((a, b) => a.timeMs - b.timeMs);
-
-    return events;
+  protected collectRunEvents() {
+    return [...this.runEvents].sort((a, b) => a.timeMs - b.timeMs);
   }
 
   protected async endRun(): Promise<void> {
