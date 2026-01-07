@@ -32,6 +32,8 @@ export default class UIButton extends Phaser.GameObjects.Container {
     
     this.add([this.bg, this.text]);
 
+    this.setSize(width, height);
+
     // ✨ IMPORTANT ✨
     // DO NOT add the button to the scene automatically.
     // It must be added only when the popup chooses the parent.

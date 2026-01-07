@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import ApiService from "../../logic/ApiService";
 import PlayerSprite from "../../sprites/players/PlayerSprite";
 import type { PlayerConfig } from "../../sprites/players/PlayerSprite";
 import MusicNoteSprite from "../../sprites/items/MusicNoteSprite";
@@ -6,6 +7,7 @@ import { SongRegistry } from "../../songconfig/songregistry";
 import type { SongConfig, PartConfig } from "../../songconfig/songconfig";
 
 export default abstract class BaseLevelScene extends Phaser.Scene {
+  private api: ApiService;
   protected songConfig!: SongConfig;
   protected partConfig!: PartConfig;
   protected musicTracks: Phaser.Sound.BaseSound[] = [];
@@ -14,10 +16,11 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   protected controlledTrackFaded = false;
   protected musicStartTimeMs = 0;
   protected readonly PRE_ROLL_MS = 1000;
-
+  
   constructor(key: string) {
     super(key);
     this.levelKey = key;
+    this.api = new ApiService("http://localhost:8080");
   }
 
   init(data: { songKey: string; partKey: string }) {
@@ -194,7 +197,8 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   protected spawnMusicNote(
     lane: number,
     frame: number,
-    xOffsetPx: number = 0
+    xOffsetPx: number = 0,
+    spawnTimeMs?: number
   ): void {
     const baseX = this.scale.width + 50;
     const x = baseX - xOffsetPx;
@@ -202,8 +206,19 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     const yPositions = [100, 200, 300, 400];
     const y = yPositions[lane - 1];
 
-    const note = new MusicNoteSprite(this, x, y, frame);
+    const actualSpawnTime = spawnTimeMs ?? Date.now();
+
+    const note = new MusicNoteSprite(
+      this,
+      x,
+      y,
+      lane,
+      actualSpawnTime,
+      frame
+    );
+
     note.setDepth(20);
+
     this.musicNotes.add(note);
   }
 
@@ -225,23 +240,27 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
       if (delay >= 0) {
         this.time.delayedCall(delay, () => {
           // Normal spawn
-          this.spawnMusicNote(note.lane, note.frame);
+          this.spawnMusicNote(note.lane, note.frame, 0, spawnTimeMs);
         });
       } else {
         const latenessMs = -delay; // Late note — spawn immediately, but shifted left
         const xOffsetPx = (latenessMs / 1000) * speed;
-        
-        this.spawnMusicNote(note.lane, note.frame, xOffsetPx);
+
+        this.spawnMusicNote(note.lane, note.frame, xOffsetPx, spawnTimeMs);
       }
 
       lastNoteTime = Math.max(lastNoteTime, hitTimeMs);
     });
-    
+
     const extraDelay = 2000;
     const now = this.time.now;
     const delayMs = Math.max(0, lastNoteTime + extraDelay - now);
 
-    this.time.delayedCall(delayMs, () => this.showEndMenu());
+    //this.time.delayedCall(delayMs, () => this.showEndMenu());
+    this.time.delayedCall(delayMs, async () => {
+      await this.endRun();
+      this.showEndMenu();
+    });
   }
 
   protected onNoteMissed(): void {
@@ -311,4 +330,58 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   protected resetCombo(): void {
     this.combo = 0;
   }*/
+
+  // -----------------------------
+  // SEND DATA TO BACKEND
+  // -----------------------------
+  protected collectRunEvents(): Array<{
+    timeMs: number;
+    lane: number;
+    type: string;
+  }> {
+    const events: Array<{ timeMs: number; lane: number; type: string }> = [];
+
+    // Iterate over all music notes
+    this.musicNotes.getChildren().forEach((noteObj) => {
+      const note = noteObj as MusicNoteSprite;
+
+      if (!note.spawnTimeMs || !note.lane) return;
+
+      // Determine event type
+      const eventType = note.collected ? "HIT" : "MISS";
+
+      events.push({
+        timeMs: note.spawnTimeMs,
+        lane: note.lane,
+        type: eventType,
+      });
+    });
+
+    // Sort events by time, just in case
+    events.sort((a, b) => a.timeMs - b.timeMs);
+
+    return events;
+  }
+
+  protected async endRun(): Promise<void> {
+    const runData = {
+      email: localStorage.getItem("playeremail"),
+      name: localStorage.getItem("playername"),
+      run: {
+        songKey: this.songConfig.key,
+        partKey: this.partConfig.key,
+        events: this.collectRunEvents(), // you will implement this
+      },
+    };
+
+    try {
+      const result = await this.api.submitRun(runData);
+      console.log("Run submitted! Score:", result.score);
+
+      // optionally update UI
+      this.scoreText.setText(`Final Score: ${result.score}`);
+    } catch (err) {
+      console.error("Failed to submit run:", err);
+    }
+  }
 }

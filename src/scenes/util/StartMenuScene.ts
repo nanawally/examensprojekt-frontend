@@ -68,7 +68,14 @@ export default class StartMenuScene extends Phaser.Scene {
       BUTTON_WIDTH,
       BUTTON_HEIGHT,
       () => {
-        this.openSongSelectPopup();
+        const email = localStorage.getItem("playeremail");
+        const name = localStorage.getItem("playername");
+
+        if (email && name) {
+          this.openSongSelectPopup();
+        } else {
+          this.openPlayerInfoPopup();
+        }
       }
     );
 
@@ -147,30 +154,56 @@ export default class StartMenuScene extends Phaser.Scene {
   }
 
   // ============================================================
+  // POPUP: PLAYER INFO
+  // ============================================================
+  private openPlayerInfoPopup() {
+    const { width, height } = this.scale;
+
+    const popup = new Popup(
+      this,
+      width,
+      height,
+      "Player Info",
+      "Enter your email and leaderboard name",
+      [],
+      () => this.popPopup(),
+      { showBackButton: false }
+    );
+
+    const form = this.add.dom(0, 40).createFromHTML(`
+    <form style="display:flex;flex-direction:column;gap:12px;width:300px">
+      <input name="email" type="email" placeholder="Email" />
+      <input name="name" type="text" placeholder="Leaderboard Name" />
+      <button type="button" name="submit">Continue</button>
+    </form>
+  `);
+
+    popup.addToContainer(form);
+
+    form.addListener("click");
+    form.on("click", (event: any) => {
+      if (event.target.name === "submit") {
+        const email = form.getChildByName("email") as HTMLInputElement;
+        const name = form.getChildByName("name") as HTMLInputElement;
+
+        if (!email.value || !name.value) return;
+
+        localStorage.setItem("playeremail", email.value);
+        localStorage.setItem("playername", name.value);
+
+        this.popPopup();
+        this.openSongSelectPopup();
+      }
+    });
+
+    this.pushPopup(popup);
+  }
+
+  // ============================================================
   // POPUP: SONG SELECT
   // ============================================================
   private openSongSelectPopup() {
     const { width, height } = this.scale;
-
-    /*const levels = [
-      { key: "TestScene1", name: "Test Song" },
-      { key: "LuciaScene", name: "Lucia" },
-      { key: "Song2Scene", name: "Epic Drop" },
-      { key: "Song2Scene", name: "Neon Rush" },
-      { key: "Song2Scene", name: "Drift King" },
-      { key: "Song2Scene", name: "Night Drive" },
-      { key: "Song2Scene", name: "Synthwave" },
-      { key: "Song2Scene", name: "Final Boss" },
-      { key: "Song2Scene", name: "Victory Lap" },
-    ];
-    
-    // Create song buttons
-    const songButtons: UIButton[] = levels.map(
-      (level) =>
-        new UIButton(this, level.name, width * 0.35, 60, () => {
-          this.openPartSelectPopup(level);
-        })
-    );*/
 
     const songButtons = Object.values(SongRegistry).map(
       (song) =>
@@ -269,32 +302,6 @@ export default class StartMenuScene extends Phaser.Scene {
     });
 
     this.pushPopup(popup);
-
-    /*
-    const partButtons = Object.values(song.parts).map(
-      (part) =>
-        new UIButton(this, part.displayName, width * 0.35, 60, () => {
-          this.clearPopups();
-          this.scene.start(song.sceneKey, {
-            songKey: song.key,
-            partKey: part.key,
-          });
-        })
-    );
-
-    const popup = new Popup(
-      this,
-      width,
-      height,
-      "Select Part",
-      `Choose a part for ${song.key}`,
-      partButtons,
-      () => this.popPopup(),
-      { showBackButton: true }
-    );
-
-    this.pushPopup(popup);
-    */
   }
 
   // ============================================================

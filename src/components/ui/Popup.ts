@@ -43,11 +43,17 @@ export default class Popup {
     // OVERLAY (dark background behind popup)
     // -------------------------------------------------
 
-    this.overlay = scene.add
+    /*this.overlay = scene.add
       .rectangle(width / 2, height / 2, width, height, 0x000000, 0.6)
       .setOrigin(0.5)
       .setInteractive()
-      .setDepth(100);
+      .setDepth(100);*/
+
+    this.overlay = scene.add
+      .rectangle(width / 2, height / 2, width, height, 0x000000, 0.6)
+      .setOrigin(0.5)
+      .setDepth(100)
+      .setInteractive({ hitAreaCallback: () => false });
 
     // -------------------------------------------------
     // MAIN CONTAINER (all popup elements)
@@ -171,11 +177,20 @@ export default class Popup {
     // -------------------------------------------------
 
     let lastY = 0;
-    this.overlay.on("pointerdown", (p: Phaser.Input.Pointer) => {
+    /*this.overlay.on("pointerdown", (p: Phaser.Input.Pointer) => {
+      lastY = p.y;
+    });
+    
+    this.overlay.on("pointermove", (p: Phaser.Input.Pointer) => {
+      if (!p.isDown) return;
+      this.scroll(p.y - lastY);
+      lastY = p.y;
+    });*/
+    scene.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
       lastY = p.y;
     });
 
-    this.overlay.on("pointermove", (p: Phaser.Input.Pointer) => {
+    scene.input.on("pointermove", (p: Phaser.Input.Pointer) => {
       if (!p.isDown) return;
       this.scroll(p.y - lastY);
       lastY = p.y;

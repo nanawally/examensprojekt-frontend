@@ -9,11 +9,14 @@ function App() {
   useEffect(() => {
     const existingGame = (window as any).phaserGame as Phaser.Game | undefined;
     if (existingGame) existingGame.destroy(true);
-    
+
     (window as any).phaserGame = new Phaser.Game({
       type: Phaser.AUTO,
       parent: "phaser-container",
       //backgroundColor: "#5DACD8",
+      dom: {
+        createContainer: true,
+      },
       scene: [StartMenuScene, EndMenuScene, TestScene1, LuciaScene],
       scale: {
         mode: Phaser.Scale.RESIZE, // important for full-viewport responsiveness

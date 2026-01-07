@@ -2,15 +2,23 @@ import Phaser from "phaser";
 
 export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
   public collected = false;
+  public missed = false;
+  public lane!: number;
+  public spawnTimeMs!: number;
 
   constructor(
     scene: Phaser.Scene,
     x: number,
     y: number,
+    lane: number,
+    spawnTimeMs: number,
     frame?: number,
-    spriteKey: string = "musicnote" // optional, defaults to your original
+    spriteKey: string = "musicnote"
   ) {
     super(scene, x, y, spriteKey, frame ?? Phaser.Math.Between(0, 3));
+
+    this.lane = lane;
+    this.spawnTimeMs = spawnTimeMs;
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -55,25 +63,25 @@ export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
       this.destroy();
     }
   }*/
-  update(): void {
-    if (this.collected) return;
+  update(x: number): void {
+    if (this.collected || this.missed) return;
 
     const player = (this.scene as any).player as Phaser.Physics.Arcade.Sprite;
-    if (player && this.x < player.x) {
-      this.collected = true;
+
+    if ((player && this.x < player.x) || this.x < -50) {
+      this.missed = true;
       this.scene.events.emit("note-missed", this);
-      this.destroy();
-    } else if (this.x < -50) {
       this.destroy();
     }
   }
 
   // -------------------------------
-  // Collect: exactly your original
+  // Collect: HIT
   // -------------------------------
   collect(): void {
-    if (this.collected) return;
+    if (this.collected || this.missed) return;
     this.collected = true;
+    this.scene.events.emit("note-hit", this);
     this.destroy();
   }
 }
