@@ -3,6 +3,7 @@ import UIButton from "../../components/ui/UiButton";
 import Popup from "../../components/ui/Popup";
 import { SongRegistry } from "../../songconfig/songregistry";
 import type { SongConfig } from "../../songconfig/songconfig";
+import ImgButton from "../../components/ui/ImgButton";
 
 export default class StartMenuScene extends Phaser.Scene {
   private uiContainer!: Phaser.GameObjects.Container;
@@ -17,7 +18,10 @@ export default class StartMenuScene extends Phaser.Scene {
   preload(): void {
     this.load.image("menu-bg", "/assets/img/menu-bg-purple-grid.png");
     this.load.image("start-button", "/assets/img/start-button.png");
-    this.load.image("instructions-button", "/assets/img/instructions-button.png");
+    this.load.image(
+      "instructions-button",
+      "/assets/img/instructions-button.png"
+    );
     this.load.image("scoring-button", "/assets/img/scoring-button.png");
     this.load.image("socials-button", "/assets/img/socials-button.png");
 
@@ -66,7 +70,16 @@ export default class StartMenuScene extends Phaser.Scene {
     const BUTTON_HEIGHT = 70;
     const GAP = 40;
 
-    const startBtn = new UIButton(
+    const startBtn = new ImgButton(this, 0, 0, "start-button", () => {
+      const email = localStorage.getItem("playeremail");
+      const name = localStorage.getItem("playername");
+      if (email && name) {
+        this.openSongSelectPopup();
+      } else {
+        this.openPlayerInfoPopup();
+      }
+    });
+    /*const startBtn = new UIButton(
       this,
       "Choose Level",
       BUTTON_WIDTH,
@@ -81,9 +94,26 @@ export default class StartMenuScene extends Phaser.Scene {
           this.openPlayerInfoPopup();
         }
       }
-    );
+    );*/
 
-    const instructionsBtn = new UIButton(
+    const instructionsBtn = new ImgButton(
+      this,
+      0,
+      0,
+      "instructions-button",
+      () => {
+        this.openInfoPopup(
+          "Instructions",
+          [
+            "• Use arrow keys to move",
+            "• Avoid obstacles",
+            "• Collect points",
+            "• Enjoy the music",
+          ].join("\n")
+        );
+      }
+    );
+    /*const instructionsBtn = new UIButton(
       this,
       "Instructions",
       BUTTON_WIDTH,
@@ -99,9 +129,24 @@ export default class StartMenuScene extends Phaser.Scene {
           ].join("\n")
         );
       }
-    );
+    );*/
 
-    const scoringBtn = new UIButton(
+    const scoringBtn = new ImgButton(this, 0, 0, "scoring-button", () => {
+      this.openInfoPopup(
+        "Scoring",
+        [
+          "Every 12 hours:",
+          "Leaderboard for the past 12 hours resets.",
+          "",
+          "Every 24 hours:",
+          "Leaderboard info woo!",
+          "",
+          "All Time:",
+          "Highest scores ever achieved are recorded here.",
+        ].join("\n")
+      );
+    });
+    /*const scoringBtn = new UIButton(
       this,
       "Scoring",
       BUTTON_WIDTH,
@@ -121,9 +166,15 @@ export default class StartMenuScene extends Phaser.Scene {
           ].join("\n")
         );
       }
-    );
-
-    const socialBtn = new UIButton(
+    );*/
+    
+    const socialBtn = new ImgButton(this, 0, 0, "socials-button", () => {
+      window.open(
+        "https://linktr.ee/NoNSEnsSpex?utm_source=linktree_profile_share&ltsid=84c07043-7b55-49c4-be04-c9aa0b8fbec1",
+        "_blank"
+      );
+    });
+    /*const socialBtn = new UIButton(
       this,
       "Socials",
       BUTTON_WIDTH,
@@ -134,13 +185,13 @@ export default class StartMenuScene extends Phaser.Scene {
           "_blank"
         );
       }
-    );
-
+    );*/
+    
     const buttons = [startBtn, instructionsBtn, scoringBtn, socialBtn];
 
     // Stack buttons vertically under title
     this.stackVertically(buttons, -100, BUTTON_HEIGHT + GAP);
-
+    
     this.uiContainer.add([title, ...buttons]);
 
     // --------------------------------------------
