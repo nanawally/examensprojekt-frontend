@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import UIButton from "../../components/ui/UiButton";
 import Popup from "../../components/ui/Popup";
-import { SongRegistry } from "../../songconfig/songregistry";
+import { SongRegistry } from "../../songconfig/SongRegistry";
 import type { SongConfig } from "../../songconfig/songconfig";
 import ImgButton from "../../components/ui/ImgButton";
 
