@@ -4,7 +4,7 @@ export default class ApiService {
   constructor(baseUrl: string = "") {
     this.baseUrl = baseUrl; // e.g., "https://your-backend.com"
   }
-  
+
   /**
    * Submit a run to the backend
    * @param runPayload - object with { email, name, run }
@@ -12,13 +12,17 @@ export default class ApiService {
    */
   async submitRun(runPayload: any): Promise<any> {
     try {
+      console.log(
+        "Submitting run payload:",
+        JSON.stringify(runPayload, null, 2)
+      );
       const response = await fetch(`${this.baseUrl}/runs/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(runPayload),
-        credentials: "include",
+        //credentials: "include",
       });
 
       if (!response.ok) {

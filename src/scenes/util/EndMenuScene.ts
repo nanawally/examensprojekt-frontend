@@ -49,7 +49,7 @@ export default class EndMenuScene extends Phaser.Scene {
     replayButton.on("pointerdown", () => {
       this.scene.start(this.levelKey);
     });
-
+    
     // Main menu button (right side)
     const mainMenuButton = this.add
       .image(width * 0.75, height * 0.6, "mainmenu-button")

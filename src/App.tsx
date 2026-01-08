@@ -30,7 +30,7 @@ function App() {
         default: "arcade",
         arcade: {
           gravity: { x: 0, y: 300 },
-          debug: true, // set to false before publishing
+          debug: false, // set to false before publishing
         },
       },
     });

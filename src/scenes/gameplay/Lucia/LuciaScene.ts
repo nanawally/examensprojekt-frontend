@@ -6,7 +6,7 @@ export default class LuciaScene extends BaseLevelScene {
   private iceGround!: Phaser.GameObjects.TileSprite;
   private sop!: Phaser.Sound.BaseSound;
   private alt!: Phaser.Sound.BaseSound;
-
+  
   constructor() {
     super("LuciaScene");
   }
@@ -35,7 +35,7 @@ export default class LuciaScene extends BaseLevelScene {
     this.load.audio("lucia-sop", "/assets/songs/lucia/lucia-sop.mp3");
     this.load.audio("lucia-alt", "/assets/songs/lucia/lucia-alt.mp3");
   }
-
+  
   protected createBackground(): void {
     console.log("LuciaScene create, active?", this.scene.isActive());
 
@@ -87,7 +87,7 @@ export default class LuciaScene extends BaseLevelScene {
     if (this.iceGround) {
       this.iceGround.tilePositionX += 1; // scroll iceGround faster than mountains
     }
-
+    
     /*if (this.musicNotes && this.player) {
       this.musicNotes.getChildren().forEach((note: any) => {
         (note as MusicNoteSprite).update();

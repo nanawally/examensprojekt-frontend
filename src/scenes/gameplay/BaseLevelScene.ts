@@ -3,8 +3,15 @@ import ApiService from "../../logic/ApiService";
 import PlayerSprite from "../../sprites/players/PlayerSprite";
 import type { PlayerConfig } from "../../sprites/players/PlayerSprite";
 import MusicNoteSprite from "../../sprites/items/MusicNoteSprite";
-import { SongRegistry } from "../../songconfig/songregistry";
+import { SongRegistry } from "../../songconfig/SongRegistry";
 import type { SongConfig, PartConfig } from "../../songconfig/songconfig";
+import ScoreManager from "../../logic/ScoreManager";
+
+interface RunEventDTO {
+  timeMs: number;
+  lane: number;
+  type: "HIT" | "MISS";
+}
 
 export default abstract class BaseLevelScene extends Phaser.Scene {
   private api: ApiService;
@@ -82,7 +89,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     });
 
     this.runEvents = [];
-    
+
     this.events.on(
       "note-hit",
       (event: { timeMs: number; lane: number; type: "HIT" | "MISS" }) => {
@@ -115,7 +122,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
       walkAnimKey: this.visualTheme.playerWalkAnimKey,
       gravity: 1800 * scaleFactor, // incease = lower jumps, decrease = higher jumps
     };
-
+    
     if (!this.ground) {
       console.warn("Ground not yet created before player spawn!");
       return;
@@ -315,8 +322,10 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   protected score: number = 0;
   protected combo: number = 0;
   protected scoreText!: Phaser.GameObjects.Text;
+  protected scoreManager!: ScoreManager;
 
   protected createScoreDisplay(): void {
+    this.scoreManager = new ScoreManager();
     // Display score in the top-left corner
     this.scoreText = this.add.text(20, 20, `Score: ${this.score}`, {
       fontSize: "32px",
@@ -324,11 +333,16 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
       fontFamily: "Arial",
     });
     this.scoreText.setDepth(50); // make sure it's on top
+
+    this.scoreManager.onScoreChange((score) => {
+      this.scoreText.setText(`Score: ${score}`);
+    });
   }
 
   protected addScore(points: number): void {
-    this.score += points;
-    this.scoreText.setText(`Score: ${this.score}`);
+    this.scoreManager.addPoints(points);
+    //this.score += points;
+    //this.scoreText.setText(`Score: ${this.score}`);
   }
   /*
   protected addComboScore(points: number): void {
@@ -349,8 +363,18 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     type: "HIT" | "MISS";
   }> = [];
 
-  protected collectRunEvents() {
+  /*protected collectRunEvents() {
     return [...this.runEvents].sort((a, b) => a.timeMs - b.timeMs);
+  }*/
+  protected collectRunEvents(): RunEventDTO[] {
+    return this.runEvents
+      .filter((e) => e.type === "HIT" || e.type === "MISS")
+      .map((e) => ({
+        timeMs: Math.round(e.timeMs),
+        lane: e.lane,
+        type: e.type,
+      }))
+      .sort((a, b) => a.timeMs - b.timeMs);
   }
 
   protected async endRun(): Promise<void> {

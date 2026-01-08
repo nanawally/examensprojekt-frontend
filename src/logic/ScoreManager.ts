@@ -8,7 +8,7 @@ export default class ScoreManager {
     this.score += points;
     this.notify();
   }
-
+  
   /** Add points and increase combo multiplier */
   addCombo(points: number) {
     this.combo++;
