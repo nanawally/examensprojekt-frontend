@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import Phaser from "phaser";
-import TestScene1 from "./scenes/gameplay/TestScene/TestScene1";
 import StartMenuScene from "./scenes/util/StartMenuScene";
 import EndMenuScene from "./scenes/util/EndMenuScene";
 import LuciaScene from "./scenes/gameplay/Lucia/LuciaScene";
@@ -17,7 +16,7 @@ function App() {
       dom: {
         createContainer: true,
       },
-      scene: [StartMenuScene, EndMenuScene, TestScene1, LuciaScene],
+      scene: [StartMenuScene, EndMenuScene, LuciaScene],
       scale: {
         mode: Phaser.Scale.RESIZE, // important for full-viewport responsiveness
         autoCenter: Phaser.Scale.CENTER_BOTH,

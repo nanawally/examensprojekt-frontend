@@ -29,32 +29,4 @@ export const SongRegistry: Record<string, SongConfig> = {
       },
     },
   },
-  testsong: {
-    key: "testsong",
-    sceneKey: "TestScene1",
-    displayName: "Test Song",
-    bpm: 110,
-    background: {
-      sky: "snow-mountain",
-      ground: "ice-ground",
-    },
-    parts: {
-      soprano: {
-        key: "soprano",
-        displayName: "Soprano",
-        songMapKey: "lucia_soprano",
-        playerSpriteKey: "lucia_soprano_player",
-        playerSpritePath: "/assets/spritesheets/lucia/lucia_soprano_512.png",
-        controlledTrackKey: "lucia-sop",
-      },
-      alto: {
-        key: "alto",
-        displayName: "Alto",
-        songMapKey: "lucia_alto",
-        playerSpriteKey: "lucia_alto_player",
-        playerSpritePath: "/assets/spritesheets/lucia/lucia_alto_512.png",
-        controlledTrackKey: "lucia-sop",
-      },
-    },
-  },
 };

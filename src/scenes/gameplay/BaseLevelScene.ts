@@ -13,6 +13,17 @@ interface RunEventDTO {
   type: "HIT" | "MISS";
 }
 
+// Target aspect ratio for gameplay (landscape only)
+const TARGET_ASPECT_RATIO = 16 / 9;
+
+// Simple mobile detection - checks for touch support and screen size
+function isMobileDevice(): boolean {
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 0 && window.innerWidth < 1024)
+  );
+}
+
 export default abstract class BaseLevelScene extends Phaser.Scene {
   private api: ApiService;
   protected songConfig!: SongConfig;
@@ -24,10 +35,147 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   protected musicStartTimeMs = 0;
   protected readonly PRE_ROLL_MS = 1000;
 
+  // Mobile orientation handling
+  private isMobile = false;
+  private rotateOverlay?: Phaser.GameObjects.Container;
+  private orientationHandler?: () => void;
+
   constructor(key: string) {
     super(key);
     this.levelKey = key;
-    this.api = new ApiService("http://localhost:8080");
+    this.api = new ApiService(import.meta.env.VITE_API_URL ?? "http://localhost:8080");
+  }
+
+  /**
+   * Locks the game to a fixed size that fits the current window.
+   * Calculates the largest 16:9 size that fits, then locks it.
+   * On mobile portrait, shows a "please rotate" overlay instead.
+   */
+  protected lockGameplaySize(): void {
+    this.isMobile = isMobileDevice();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const isLandscape = windowWidth > windowHeight;
+
+    // Mobile in portrait - show rotate message instead of gameplay
+    if (this.isMobile && !isLandscape) {
+      this.showRotateOverlay();
+      this.setupOrientationListener();
+      return;
+    }
+
+    this.hideRotateOverlay();
+
+    if (this.isMobile) {
+      this.setupOrientationListener();
+    }
+
+    const windowRatio = windowWidth / windowHeight;
+
+    let gameWidth: number;
+    let gameHeight: number;
+
+    // Calculate largest size that fits within window while maintaining 16:9 aspect ratio
+    if (windowRatio > TARGET_ASPECT_RATIO) {
+      // Window is wider than 16:9 - constrain by height
+      gameHeight = windowHeight;
+      gameWidth = gameHeight * TARGET_ASPECT_RATIO;
+    } else {
+      // Window is taller than 16:9 - constrain by width
+      gameWidth = windowWidth;
+      gameHeight = gameWidth / TARGET_ASPECT_RATIO;
+    }
+
+    this.scale.setGameSize(Math.floor(gameWidth), Math.floor(gameHeight));
+    this.scale.scaleMode = Phaser.Scale.FIT;
+    this.scale.refresh();
+  }
+
+  /**
+   * Shows a "Please rotate your device" overlay for mobile users in portrait mode.
+   */
+  private showRotateOverlay(): void {
+    if (this.rotateOverlay) return;
+
+    const { width, height } = this.scale;
+
+    this.rotateOverlay = this.add.container(width / 2, height / 2);
+    this.rotateOverlay.setDepth(1000);
+
+    // Dark background
+    const bg = this.add.rectangle(0, 0, width * 2, height * 2, 0x000000, 0.9);
+    this.rotateOverlay.add(bg);
+
+    // Rotate icon (simple phone shape)
+    const phoneIcon = this.add.text(0, -60, "📱↔️", {
+      fontSize: "64px",
+    }).setOrigin(0.5);
+    this.rotateOverlay.add(phoneIcon);
+
+    // Message
+    const message = this.add.text(0, 40, "Please rotate your device\nto landscape mode", {
+      fontSize: "28px",
+      color: "#ffffff",
+      fontFamily: "Arial",
+      align: "center",
+    }).setOrigin(0.5);
+    this.rotateOverlay.add(message);
+
+    // Pause gameplay while overlay is shown
+    this.scene.pause();
+  }
+
+  /**
+   * Hides the rotate overlay and resumes gameplay.
+   */
+  private hideRotateOverlay(): void {
+    if (!this.rotateOverlay) return;
+
+    this.rotateOverlay.destroy();
+    this.rotateOverlay = undefined;
+
+    // Resume gameplay if it was paused
+    if (!this.scene.isActive()) {
+      this.scene.resume();
+    }
+  }
+
+  /**
+   * Sets up a listener for device orientation changes.
+   */
+  private setupOrientationListener(): void {
+    if (this.orientationHandler) return;
+
+    this.orientationHandler = () => {
+      const isLandscape = window.innerWidth > window.innerHeight;
+
+      if (this.isMobile && !isLandscape) {
+        this.showRotateOverlay();
+      } else {
+        this.hideRotateOverlay();
+        // Recalculate game size for new orientation
+        this.lockGameplaySize();
+      }
+    };
+
+    window.addEventListener("resize", this.orientationHandler);
+
+    // Clean up on scene shutdown
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.orientationHandler) {
+        window.removeEventListener("resize", this.orientationHandler);
+        this.orientationHandler = undefined;
+      }
+    });
+  }
+
+  /**
+   * Restores responsive resize mode for menu scenes.
+   * Call this before transitioning to a menu scene.
+   */
+  public static restoreResponsiveMode(scene: Phaser.Scene): void {
+    scene.scale.scaleMode = Phaser.Scale.RESIZE;
+    scene.scale.refresh();
   }
 
   init(data: { songKey: string; partKey: string }) {
@@ -59,11 +207,15 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   protected abstract createBackground(): void;
   protected ground!: Phaser.Physics.Arcade.Sprite;
   private baseScreenHeight = 1080;
+  private scaleFactor = 1;
 
   create() {
+    // Lock to fixed size to prevent note/player desync during gameplay
+    this.lockGameplaySize();
+
     const { width, height } = this.scale;
 
-    const scaleFactor = height / this.baseScreenHeight;
+    this.scaleFactor = height / this.baseScreenHeight;
 
     // -----------------------------
     // COMMON: create animation for this player type
@@ -120,7 +272,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     const playerConfig: PlayerConfig = {
       spriteKey: this.visualTheme.playerSpriteKey,
       walkAnimKey: this.visualTheme.playerWalkAnimKey,
-      gravity: 1800 * scaleFactor, // incease = lower jumps, decrease = higher jumps
+      gravity: 1800 * this.scaleFactor, // incease = lower jumps, decrease = higher jumps
     };
     
     if (!this.ground) {
@@ -137,16 +289,12 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.ground);
 
     // -----------------------------
-    // COMMON: jump input
+    // COMMON: jump input (tap/click + spacebar)
     // -----------------------------
-    this.input.on("pointerdown", () => {
-      const body = this.player.body as Phaser.Physics.Arcade.Body;
+    this.input.on("pointerdown", () => this.tryJump());
 
-      if (body.blocked.down || body.touching.down) {
-        const jumpVelocity = -1500 * scaleFactor; // increase negative number = snappier jumps
-        this.player.setVelocityY(jumpVelocity);
-      }
-    });
+    const spaceBar = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    spaceBar?.on("down", () => this.tryJump());
 
     // -----------------------------
     // COMMON: start music
@@ -167,23 +315,13 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
 
     this.createScoreDisplay();
 
-    // -----------------------------
-    // COMMON: collisions after child sets up ground
-    // -----------------------------
-    if (this.ground) {
-      this.physics.add.collider(this.player, this.ground);
-    }
-
     this.physics.add.overlap(this.player, this.musicNotes, (_player, note) => {
       (note as MusicNoteSprite).collect();
     });
 
     this.positionPlayerOnGround();
 
-    // -----------------------------
-    // COMMON: resize event
-    // -----------------------------
-    this.scale.on("resize", () => this.handleResize());
+    // Note: No resize listener - gameplay uses fixed size to prevent note desync
   }
 
   // -----------------------------
@@ -210,6 +348,20 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Attempts to make the player jump if they're on the ground.
+   */
+  private tryJump(): void {
+    if (!this.player?.body) return;
+
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+
+    if (body.blocked.down || body.touching.down) {
+      const jumpVelocity = -1500 * this.scaleFactor;
+      this.player.setVelocityY(jumpVelocity);
+    }
+  }
+
   // =====================================================
   //                  NOTE SPAWN LOGIC
   // =====================================================
@@ -223,7 +375,17 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     const baseX = this.scale.width + 50;
     const x = baseX - xOffsetPx;
 
-    const yPositions = [100, 200, 300, 400];
+    // Scale lane positions based on screen height
+    // Player is 25% tall, standing at ground (~83%), so player top is ~58%
+    // Notes are 10% tall (centered), so need 5% margin from edges
+    // All lanes must be ABOVE player's standing position to require jumping
+    const { height } = this.scale;
+    const yPositions = [
+      height * 0.18,  // Lane 1 - highest (note spans 13%-23%)
+      height * 0.30,  // Lane 2 (note spans 25%-35%)
+      height * 0.42,  // Lane 3 (note spans 37%-47%)
+      height * 0.52,  // Lane 4 - lowest (note spans 47%-57%, just above player head at 58%)
+    ];
     const y = yPositions[lane - 1];
 
     const actualSpawnTime = spawnTimeMs ?? Date.now();
@@ -313,7 +475,14 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
   }
 
   protected showEndMenu(): void {
-    this.scene.start("EndMenuScene", { levelKey: this.levelKey });
+    // Restore responsive mode before transitioning to menu
+    BaseLevelScene.restoreResponsiveMode(this);
+
+    this.scene.start("EndMenuScene", {
+      levelKey: this.levelKey,
+      songKey: this.songConfig.key,
+      partKey: this.partConfig.key,
+    });
   }
 
   // -----------------------------

@@ -4,12 +4,29 @@ import Popup from "../../components/ui/Popup";
 import { SongRegistry } from "../../songconfig/SongRegistry";
 import type { SongConfig } from "../../songconfig/songconfig";
 import ImgButton from "../../components/ui/ImgButton";
+import BaseLevelScene from "../gameplay/BaseLevelScene";
+
+// Simple mobile detection
+function isMobileDevice(): boolean {
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 0 && window.innerWidth < 1024)
+  );
+}
 
 export default class StartMenuScene extends Phaser.Scene {
   private uiContainer!: Phaser.GameObjects.Container;
   private popupContainer: Popup | null = null;
   private popupStack: Popup[] = []; // stack popups for song select and part select
   private resizeHandler?: (size: Phaser.Structs.Size) => void;
+
+  // UI elements that need repositioning on resize
+  private title!: Phaser.GameObjects.Image;
+  private buttons: Phaser.GameObjects.Container[] = [];
+  private bg!: Phaser.GameObjects.Image;
+
+  // Mobile orientation handling
+  private rotateOverlay?: Phaser.GameObjects.Container;
 
   constructor() {
     super({ key: "StartMenuScene" });
@@ -37,12 +54,15 @@ export default class StartMenuScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Ensure responsive mode is active for menu
+    BaseLevelScene.restoreResponsiveMode(this);
+
     const { width, height } = this.scale;
 
     // --------------------------------------------
     // BACKGROUND
     // --------------------------------------------
-    const bg = this.add
+    this.bg = this.add
       .image(width / 2, height / 2, "menu-bg")
       .setOrigin(0.5)
       .setDisplaySize(width, height)
@@ -54,28 +74,12 @@ export default class StartMenuScene extends Phaser.Scene {
     this.uiContainer = this.add.container(width / 2, height / 2);
 
     // Title
-    /*const title = this.add
-      .text(0, -200, "Music Runner", {
-        fontSize: "64px",
-        fontFamily: "Arial",
-        color: "#ffffff",
-        stroke: "#000000",
-        strokeThickness: 6,
-      })
-      .setOrigin(0.5);*/
-
-    const title = this.add.image(0, -200, "title-graphic").setOrigin(0.5);
-
-    title.setScale(110 / title.height);
-    this.uiContainer.add(title);
+    this.title = this.add.image(0, 0, "title-graphic").setOrigin(0.5);
+    this.uiContainer.add(this.title);
 
     // --------------------------------------------
     // BUTTONS
     // --------------------------------------------
-    const BUTTON_WIDTH = width * 0.3;
-    const BUTTON_HEIGHT = 70;
-    const GAP = 40;
-
     const startBtn = new ImgButton(this, 0, 0, "start-button", () => {
       const email = localStorage.getItem("playeremail");
       const name = localStorage.getItem("playername");
@@ -85,22 +89,6 @@ export default class StartMenuScene extends Phaser.Scene {
         this.openPlayerInfoPopup();
       }
     });
-    /*const startBtn = new UIButton(
-      this,
-      "Choose Level",
-      BUTTON_WIDTH,
-      BUTTON_HEIGHT,
-      () => {
-        const email = localStorage.getItem("playeremail");
-        const name = localStorage.getItem("playername");
-
-        if (email && name) {
-          this.openSongSelectPopup();
-        } else {
-          this.openPlayerInfoPopup();
-        }
-      }
-    );*/
 
     const instructionsBtn = new ImgButton(
       this,
@@ -120,23 +108,6 @@ export default class StartMenuScene extends Phaser.Scene {
         );
       }
     );
-    /*const instructionsBtn = new UIButton(
-      this,
-      "Instructions",
-      BUTTON_WIDTH,
-      BUTTON_HEIGHT,
-      () => {
-        this.openInfoPopup(
-          "Instructions",
-          [
-            "• Use arrow keys to move",
-            "• Avoid obstacles",
-            "• Collect points",
-            "• Enjoy the music",
-          ].join("\n")
-        );
-      }
-    );*/
 
     const scoringBtn = new ImgButton(this, 0, 0, "scoring-button", () => {
       this.openInfoPopup(
@@ -153,27 +124,6 @@ export default class StartMenuScene extends Phaser.Scene {
         ].join("\n")
       );
     });
-    /*const scoringBtn = new UIButton(
-      this,
-      "Scoring",
-      BUTTON_WIDTH,
-      BUTTON_HEIGHT,
-      () => {
-        this.openInfoPopup(
-          "Scoring",
-          [
-            "Every 12 hours:",
-            "Leaderboard for the past 12 hours resets.",
-            "",
-            "Every 24 hours:",
-            "Leaderboard info woo!",
-            "",
-            "All Time:",
-            "Highest scores ever achieved are recorded here.",
-          ].join("\n")
-        );
-      }
-    );*/
 
     const socialBtn = new ImgButton(this, 0, 0, "socials-button", () => {
       window.open(
@@ -181,40 +131,113 @@ export default class StartMenuScene extends Phaser.Scene {
         "_blank"
       );
     });
-    /*const socialBtn = new UIButton(
-      this,
-      "Socials",
-      BUTTON_WIDTH,
-      BUTTON_HEIGHT,
-      () => {
-        window.open(
-          "https://linktr.ee/NoNSEnsSpex?utm_source=linktree_profile_share&ltsid=84c07043-7b55-49c4-be04-c9aa0b8fbec1",
-          "_blank"
-        );
-      }
-    );*/
 
-    const buttons = [startBtn, instructionsBtn, scoringBtn, socialBtn];
+    this.buttons = [startBtn, instructionsBtn, scoringBtn, socialBtn];
+    this.uiContainer.add(this.buttons);
 
-    // Stack buttons vertically under title
-    this.stackVertically(buttons, -100, BUTTON_HEIGHT + GAP);
-
-    this.uiContainer.add([title, ...buttons]);
+    // Initial layout
+    this.layoutUI(width, height);
 
     // --------------------------------------------
-    // RESPONSIVE
+    // RESPONSIVE + MOBILE ORIENTATION CHECK
     // --------------------------------------------
-
-    this.resizeHandler = (size: any) => {
-      bg.setDisplaySize(size.width, size.height);
+    this.resizeHandler = (size: Phaser.Structs.Size) => {
+      this.bg.setPosition(size.width / 2, size.height / 2);
+      this.bg.setDisplaySize(size.width, size.height);
       this.uiContainer.setPosition(size.width / 2, size.height / 2);
-      if (this.popupContainer)
+      this.layoutUI(size.width, size.height);
+      if (this.popupContainer) {
         this.popupContainer.setPosition(size.width / 2, size.height / 2);
+      }
+      // Check mobile orientation
+      this.checkMobileOrientation();
     };
+
+    this.scale.on("resize", this.resizeHandler);
+
+    // Initial orientation check
+    this.checkMobileOrientation();
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       if (this.resizeHandler) this.scale.off("resize", this.resizeHandler);
     });
+  }
+
+  /**
+   * Lays out UI elements based on current screen dimensions.
+   * Scales and positions elements to fit any screen size.
+   */
+  private layoutUI(width: number, height: number): void {
+    // Scale based on the smaller dimension to ensure everything fits
+    const baseSize = 600; // Reference size for scaling
+    const scaleFactor = Math.min(width, height) / baseSize;
+    const clampedScale = Math.max(0.5, Math.min(1.5, scaleFactor));
+
+    // Title - scale to be readable but not huge
+    const titleScale = clampedScale * 0.4;
+    this.title.setScale(titleScale);
+    this.title.y = -height * 0.26;
+
+    // Buttons - scale and stack with proper gaps
+    const buttonScale = clampedScale * 0.55;
+    const buttonGap = 85 * clampedScale;
+    const buttonsStartY = -height * 0.12;
+
+    this.buttons.forEach((btn, i) => {
+      btn.setScale(buttonScale);
+      btn.y = buttonsStartY + i * buttonGap;
+    });
+  }
+
+  // ============================================================
+  // MOBILE ORIENTATION HANDLING
+  // ============================================================
+  private checkMobileOrientation(): void {
+    const isMobile = isMobileDevice();
+    const isLandscape = window.innerWidth > window.innerHeight;
+
+    if (isMobile && !isLandscape) {
+      this.showRotateOverlay();
+    } else {
+      this.hideRotateOverlay();
+    }
+  }
+
+  private showRotateOverlay(): void {
+    if (this.rotateOverlay) return;
+
+    const { width, height } = this.scale;
+
+    this.rotateOverlay = this.add.container(width / 2, height / 2);
+    this.rotateOverlay.setDepth(1000);
+
+    // Dark background
+    const bg = this.add.rectangle(0, 0, width * 2, height * 2, 0x000000, 0.9);
+    this.rotateOverlay.add(bg);
+
+    // Rotate icon
+    const phoneIcon = this.add
+      .text(0, -60, "📱↔️", { fontSize: "64px" })
+      .setOrigin(0.5);
+    this.rotateOverlay.add(phoneIcon);
+
+    // Message
+    const message = this.add
+      .text(0, 40, "Please rotate your device\nto landscape mode", {
+        fontSize: "28px",
+        color: "#ffffff",
+        fontFamily: "Arial",
+        align: "center",
+      })
+      .setOrigin(0.5);
+    this.rotateOverlay.add(message);
+  }
+
+  private hideRotateOverlay(): void {
+    if (!this.rotateOverlay) return;
+
+    this.rotateOverlay.destroy();
+    this.rotateOverlay = undefined;
   }
 
   // ============================================================
@@ -400,18 +423,6 @@ export default class StartMenuScene extends Phaser.Scene {
   // ============================================================
   // HELPERS
   // ============================================================
-  private stackVertically(
-    items: Phaser.GameObjects.Container[],
-    startY: number,
-    gap: number
-  ) {
-    let y = startY;
-    for (const item of items) {
-      item.y = y;
-      y += gap;
-    }
-  }
-
   private pushPopup(popup: Popup) {
     const depthBase = 100 + this.popupStack.length * 10;
     popup.setDepth(depthBase);

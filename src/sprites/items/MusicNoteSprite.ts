@@ -13,7 +13,7 @@ export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
     lane: number,
     spawnTimeMs: number,
     frame?: number,
-    spriteKey: string = "musicnote"
+    spriteKey: string = "musicnote",
   ) {
     super(scene, x, y, spriteKey, frame ?? Phaser.Math.Between(0, 3));
 
@@ -60,7 +60,11 @@ export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
 
     if ((player && this.x < player.x) || this.x < -50) {
       this.missed = true;
-      this.scene.events.emit("note-missed", this);
+      this.scene.events.emit("note-missed", {
+        timeMs: this.spawnTimeMs,
+        lane: this.lane,
+        type: "MISS",
+      });
       // Destroy after 2 seconds
       this.scene.time.delayedCall(2000, () => {
         this.destroy();

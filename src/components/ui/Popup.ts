@@ -13,6 +13,8 @@ export default class Popup {
   private scrollStartY: number;
   private maskHeight: number;
   private wheelHandler: (p: any, dx: number, dy: number) => void;
+  private pointerDownHandler: (p: Phaser.Input.Pointer) => void;
+  private pointerMoveHandler: (p: Phaser.Input.Pointer) => void;
 
   private onClose?: () => void;
   scene: any;
@@ -31,12 +33,17 @@ export default class Popup {
   ) {
     this.onClose = onClose;
 
-    const popupWidth = width * 0.6;
-    const popupHeight = height * 0.6;
-    this.popupWidth = width * 0.6;
-    this.popupHeight = height * 0.6;
-    this.maskHeight = popupHeight - 120;
-    this.scrollStartY = -popupHeight / 2 + 100;
+    // Calculate scale factor based on screen size
+    const baseSize = 700;
+    const scaleFactor = Math.min(width, height) / baseSize;
+    const clampedScale = Math.max(0.5, Math.min(1.2, scaleFactor));
+
+    const popupWidth = width * 0.7;
+    const popupHeight = height * 0.7;
+    this.popupWidth = popupWidth;
+    this.popupHeight = popupHeight;
+    this.maskHeight = popupHeight - 120 * clampedScale;
+    this.scrollStartY = -popupHeight / 2 + 100 * clampedScale;
     this.scene = scene;
 
     // -------------------------------------------------
@@ -71,9 +78,10 @@ export default class Popup {
     // TITLE TEXT
     // -------------------------------------------------
 
+    const titleFontSize = Math.floor(36 * clampedScale);
     const title = scene.add
-      .text(0, -popupHeight / 2 + 50, titleText, {
-        fontSize: "48px",
+      .text(0, -popupHeight / 2 + 40 * clampedScale, titleText, {
+        fontSize: `${titleFontSize}px`,
         color: "#ffffff",
         stroke: "#000000",
         strokeThickness: 2,
@@ -92,16 +100,17 @@ export default class Popup {
     //const contentY = title.y + title.height / 2 + TITLE_BOTTOM_PADDING;
     const contentY = 0;
 
+    const contentFontSize = Math.floor(20 * clampedScale);
     const content = scene.add
       .text(0, contentY, contentText, {
-        fontSize: "28px",
+        fontSize: `${contentFontSize}px`,
         color: "#ffffff",
         stroke: "#000000",
         strokeThickness: 2,
         fontFamily: "Arial",
         align: "center",
-        wordWrap: { width: popupWidth - 80 },
-        lineSpacing: 10,
+        wordWrap: { width: popupWidth - 60 * clampedScale },
+        lineSpacing: 8 * clampedScale,
       })
       .setOrigin(0.5, 0); // top-aligned vertically
 
@@ -111,14 +120,16 @@ export default class Popup {
     // SCROLL CONTAINER (for buttons)
     // -------------------------------------------------
 
+    const buttonGap = 55 * clampedScale;
     this.scrollContainer = scene.add.container(0, this.scrollStartY);
     buttons.forEach((btn, i) => {
       btn.x = 0;
-      btn.y = 20 + i * 70;
+      btn.y = 15 * clampedScale + i * buttonGap;
+      btn.setScale(clampedScale);
       this.scrollContainer.add(btn);
     });
 
-    this.scrollHeight = content.height + 30 + buttons.length * 70;
+    this.scrollHeight = content.height + 25 * clampedScale + buttons.length * buttonGap;
     this.scrollContainer.setDepth(2);
     this.container.add(this.scrollContainer);
     this.scrollContainer.add(content);
@@ -127,8 +138,8 @@ export default class Popup {
     //  MASK FOR SCROLLING AREA
     // -------------------------------------------------
 
-    const MASK_PADDING_TOP = 12;
-    const worldX = width / 2 - popupWidth / 2 + 20;
+    const MASK_PADDING_TOP = 10 * clampedScale;
+    const worldX = width / 2 - popupWidth / 2 + 15 * clampedScale;
     const worldY = height / 2 + this.scrollStartY - MASK_PADDING_TOP;
 
     const maskGfx = scene.add.graphics();
@@ -136,7 +147,7 @@ export default class Popup {
     maskGfx.fillRect(
       worldX,
       worldY,
-      popupWidth - 40,
+      popupWidth - 30 * clampedScale,
       this.maskHeight + MASK_PADDING_TOP
     );
 
@@ -153,18 +164,20 @@ export default class Popup {
     // CLOSE BUTTON (small X, top-right corner)
     // -------------------------------------------------
 
+    const btnSize = Math.floor(32 * clampedScale);
+    const btnOffset = 24 * clampedScale;
     if (options?.showBackButton) {
       // Back button (top-left)
-      const backBtn = new UIButton(scene, "<", 40, 40, () => this.onClose?.());
-      backBtn.x = -popupWidth / 2 + 30;
-      backBtn.y = -popupHeight / 2 + 30;
+      const backBtn = new UIButton(scene, "<", btnSize, btnSize, () => this.onClose?.());
+      backBtn.x = -popupWidth / 2 + btnOffset;
+      backBtn.y = -popupHeight / 2 + btnOffset;
       backBtn.setDepth(3);
       this.container.add(backBtn);
     } else {
       // Close button (top-right)
-      const closeBtn = new UIButton(scene, "X", 40, 40, () => this.onClose?.());
-      closeBtn.x = popupWidth / 2 - 30;
-      closeBtn.y = -popupHeight / 2 + 30;
+      const closeBtn = new UIButton(scene, "X", btnSize, btnSize, () => this.onClose?.());
+      closeBtn.x = popupWidth / 2 - btnOffset;
+      closeBtn.y = -popupHeight / 2 + btnOffset;
       closeBtn.setDepth(3);
       this.container.add(closeBtn);
     }
@@ -174,25 +187,19 @@ export default class Popup {
     // -------------------------------------------------
 
     let lastY = 0;
-    /*this.overlay.on("pointerdown", (p: Phaser.Input.Pointer) => {
+    this.pointerDownHandler = (p: Phaser.Input.Pointer) => {
       lastY = p.y;
-    });
-    
-    this.overlay.on("pointermove", (p: Phaser.Input.Pointer) => {
-      if (!p.isDown) return;
-      this.scroll(p.y - lastY);
-      lastY = p.y;
-    });*/
-    scene.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
-      lastY = p.y;
-    });
+    };
 
-    scene.input.on("pointermove", (p: Phaser.Input.Pointer) => {
+    this.pointerMoveHandler = (p: Phaser.Input.Pointer) => {
       if (!p.isDown) return;
       this.scroll(p.y - lastY);
       lastY = p.y;
-    });
-    
+    };
+
+    scene.input.on("pointerdown", this.pointerDownHandler);
+    scene.input.on("pointermove", this.pointerMoveHandler);
+
     this.wheelHandler = (_p: any, _dx: any, dy: number) => {
       this.scroll(-dy * 0.4);
     };
@@ -238,21 +245,14 @@ export default class Popup {
   /* ---------------- new---------------------------- */
 
   destroy() {
-    // Remove wheel listener
+    // Remove input listeners
     this.scene.input.off("wheel", this.wheelHandler);
-
-    // Remove drag listeners
-    this.overlay.off("pointerdown");
-    this.overlay.off("pointermove");
+    this.scene.input.off("pointerdown", this.pointerDownHandler);
+    this.scene.input.off("pointermove", this.pointerMoveHandler);
 
     // Destroy visuals
     this.mask.destroy();
     this.overlay.destroy();
     this.container.destroy(true);
-
-    console.log("Popup destroyed:", this);
-
-    // Call optional onClose callback
-    //this.onClose?.();
   }
 }

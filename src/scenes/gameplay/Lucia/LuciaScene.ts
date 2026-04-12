@@ -15,7 +15,7 @@ export default class LuciaScene extends BaseLevelScene {
     const playerKey = this.partConfig.playerSpriteKey;
     const playerPath = this.partConfig.playerSpritePath;
     const songMapKey = this.partConfig.songMapKey;
-    const songMapPath = `assets/songmaps/lucia/${this.partConfig.key}.json`;
+    const songMapPath = `/assets/songmaps/lucia/${this.partConfig.key}.json`;
 
     this.load.spritesheet(playerKey, playerPath, {
       frameWidth: 512,
@@ -29,8 +29,8 @@ export default class LuciaScene extends BaseLevelScene {
     this.load.json(songMapKey, songMapPath);
 
     const { sky, ground } = this.songConfig.background;
-    this.load.image(sky, `assets/img/${sky}.png`);
-    this.load.image(ground, `assets/img/${ground}.png`);
+    this.load.image(sky, `/assets/img/${sky}.png`);
+    this.load.image(ground, `/assets/img/${ground}.png`);
 
     this.load.audio("lucia-sop", "/assets/songs/lucia/lucia-sop.mp3");
     this.load.audio("lucia-alt", "/assets/songs/lucia/lucia-alt.mp3");
@@ -142,10 +142,10 @@ export default class LuciaScene extends BaseLevelScene {
     }
 
     if (this.ground && this.ground.body) {
-      const brickImg = this.textures.get("bricks").getSourceImage();
+      const groundImg = this.textures.get("ice-ground").getSourceImage();
       this.ground.setScale(
-        width / brickImg.width,
-        height / 6 / brickImg.height
+        width / groundImg.width,
+        height / 6 / groundImg.height
       );
       this.ground.refreshBody();
     }
