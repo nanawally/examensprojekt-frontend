@@ -4,13 +4,23 @@ import PlayerSprite from "../../sprites/players/PlayerSprite";
 import type { PlayerConfig } from "../../sprites/players/PlayerSprite";
 import MusicNoteSprite from "../../sprites/items/MusicNoteSprite";
 import { SongRegistry } from "../../songconfig/SongRegistry";
-import type { SongConfig, PartConfig } from "../../songconfig/songconfig";
+import type { SongConfig, PartConfig } from "../../songconfig/SongConfig";
 import ScoreManager from "../../logic/ScoreManager";
 
 interface RunEventDTO {
   timeMs: number;
   lane: number;
   type: "HIT" | "MISS";
+}
+
+interface SongMapNote {
+  time: number;
+  lane: number;
+  frame: number;
+}
+
+interface SongMap {
+  notes: SongMapNote[];
 }
 
 // Target aspect ratio for gameplay (landscape only)
@@ -400,7 +410,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
     this.musicNotes.add(note);
   }
 
-  protected scheduleNotesFromMap(songMap: any) {
+  protected scheduleNotesFromMap(songMap: SongMap) {
     const speed = 200; // px/s
 
     const spawnX = this.scale.width + 50;
@@ -410,7 +420,7 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
 
     let lastNoteTime = 0;
 
-    songMap.notes.forEach((note: any) => {
+    songMap.notes.forEach((note: SongMapNote) => {
       const hitTimeMs = this.musicStartTimeMs + note.time;
       const spawnTimeMs = hitTimeMs - travelTimeMs;
       const delay = spawnTimeMs - this.time.now;
@@ -545,15 +555,23 @@ export default abstract class BaseLevelScene extends Phaser.Scene {
       }))
       .sort((a, b) => a.timeMs - b.timeMs);
   }
-
+  
   protected async endRun(): Promise<void> {
+    const email = localStorage.getItem("playeremail");
+    const name = localStorage.getItem("playername");
+
+    if (!email || !name) {
+      console.error("Missing player email or name in localStorage");
+      return;
+    }
+
     const runData = {
-      email: localStorage.getItem("playeremail"),
-      name: localStorage.getItem("playername"),
+      email,
+      name,
       run: {
         songKey: this.songConfig.key,
         partKey: this.partConfig.key,
-        events: this.collectRunEvents(), // you will implement this
+        events: this.collectRunEvents(),
       },
     };
 

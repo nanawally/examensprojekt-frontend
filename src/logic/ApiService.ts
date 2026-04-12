@@ -1,6 +1,31 @@
+interface RunEventDTO {
+  timeMs: number;
+  lane: number;
+  type: "HIT" | "MISS";
+}
+
+interface RunSubmission {
+  songKey: string;
+  partKey: string;
+  events: RunEventDTO[];
+}
+
+interface RunSubmitRequest {
+  email: string;
+  name: string;
+  run: RunSubmission;
+}
+
+interface RunValidationResult {
+  valid: boolean;
+  score: number;
+  hitCount: number;
+  reason: string | null;
+}
+
 export default class ApiService {
   private baseUrl: string;
-  
+
   constructor(baseUrl: string = "") {
     this.baseUrl = baseUrl; // e.g., "https://your-backend.com"
   }
@@ -10,7 +35,7 @@ export default class ApiService {
    * @param runPayload - object with { email, name, run }
    * @returns parsed JSON response
    */
-  async submitRun(runPayload: any): Promise<any> {
+  async submitRun(runPayload: RunSubmitRequest): Promise<RunValidationResult> {
     try {
       console.log(
         "Submitting run payload:",
@@ -41,7 +66,7 @@ export default class ApiService {
   /**
    * Future: Get leaderboard
    */
-  async getLeaderboard(): Promise<any> {
+  async getLeaderboard(): Promise<unknown> {
     const response = await fetch(`${this.baseUrl}/leaderboard`);
     if (!response.ok) throw new Error("Failed to fetch leaderboard");
     return await response.json();
@@ -50,7 +75,7 @@ export default class ApiService {
   /**
    * Future: Create user
    */
-  async createUser(userData: any): Promise<any> {
+  async createUser(userData: unknown): Promise<unknown> {
     const response = await fetch(`${this.baseUrl}/createnewuser`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

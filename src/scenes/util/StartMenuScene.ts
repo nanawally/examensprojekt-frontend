@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import UIButton from "../../components/ui/UiButton";
 import Popup from "../../components/ui/Popup";
 import { SongRegistry } from "../../songconfig/SongRegistry";
-import type { SongConfig } from "../../songconfig/songconfig";
+import type { SongConfig } from "../../songconfig/SongConfig";
 import ImgButton from "../../components/ui/ImgButton";
 import BaseLevelScene from "../gameplay/BaseLevelScene";
 
@@ -276,8 +276,9 @@ export default class StartMenuScene extends Phaser.Scene {
     popup.addToContainer(form);
 
     form.addListener("click");
-    form.on("click", (event: any) => {
-      if (event.target.name === "submit") {
+    form.on("click", (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.getAttribute("name") === "submit") {
         const email = form.getChildByName("email") as HTMLInputElement;
         const name = form.getChildByName("name") as HTMLInputElement;
 

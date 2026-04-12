@@ -62,26 +62,8 @@ export default class PlayerSprite extends Phaser.Physics.Arcade.Sprite {
     if (this.scene.anims.exists(this.config.walkAnimKey)) {
       this.play(this.config.walkAnimKey);
     }
-
-    /*// If scale not provided, auto-scale to 50% of screen height
-    if (this.config.scale !== undefined) {
-      this.setScale(this.config.scale);
-    } else {
-      const frameHeight = this.texture.get(0).height;
-      const targetHeight = this.scene.scale.height * 0.5;
-      this.setScale(targetHeight / frameHeight);
-    }
-
-    // Resize body after scaling
-    this.body?.setSize(this.displayWidth, this.displayHeight);
-    this.setOrigin(0.5, 1);
-
-    // Start animation if available
-    if (this.scene.anims.exists(this.config.walkAnimKey)) {
-      this.play(this.config.walkAnimKey);
-    }*/
   }
-
+  
   update() {
     // Handle player movement, controls, etc.
   }

@@ -1,4 +1,4 @@
-import type { SongConfig } from "../songconfig/songconfig.ts";
+import type { SongConfig } from "./SongConfig";
 
 export const SongRegistry: Record<string, SongConfig> = {
   lucia: {

@@ -12,12 +12,12 @@ export default class Popup {
   private scrollHeight = 0;
   private scrollStartY: number;
   private maskHeight: number;
-  private wheelHandler: (p: any, dx: number, dy: number) => void;
+  private wheelHandler: (p: Phaser.Input.Pointer, dx: number, dy: number) => void;
   private pointerDownHandler: (p: Phaser.Input.Pointer) => void;
   private pointerMoveHandler: (p: Phaser.Input.Pointer) => void;
 
   private onClose?: () => void;
-  scene: any;
+  scene: Phaser.Scene;
 
   constructor(
     scene: Phaser.Scene,
@@ -200,7 +200,7 @@ export default class Popup {
     scene.input.on("pointerdown", this.pointerDownHandler);
     scene.input.on("pointermove", this.pointerMoveHandler);
 
-    this.wheelHandler = (_p: any, _dx: any, dy: number) => {
+    this.wheelHandler = (_p: Phaser.Input.Pointer, _dx: number, dy: number) => {
       this.scroll(-dy * 0.4);
     };
 

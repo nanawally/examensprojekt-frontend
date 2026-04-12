@@ -4,12 +4,18 @@ import StartMenuScene from "./scenes/util/StartMenuScene";
 import EndMenuScene from "./scenes/util/EndMenuScene";
 import LuciaScene from "./scenes/gameplay/Lucia/LuciaScene";
 
+declare global {
+  interface Window {
+    phaserGame?: Phaser.Game;
+  }
+}
+
 function App() {
   useEffect(() => {
-    const existingGame = (window as any).phaserGame as Phaser.Game | undefined;
+    const existingGame = window.phaserGame;
     if (existingGame) existingGame.destroy(true);
 
-    (window as any).phaserGame = new Phaser.Game({
+    window.phaserGame = new Phaser.Game({
       type: Phaser.AUTO,
       parent: "phaser-container",
       //backgroundColor: "#5DACD8",

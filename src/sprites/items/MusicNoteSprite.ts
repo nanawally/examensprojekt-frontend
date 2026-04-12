@@ -1,5 +1,9 @@
 import Phaser from "phaser";
 
+interface SceneWithPlayer extends Phaser.Scene {
+  player: Phaser.Physics.Arcade.Sprite;
+}
+
 export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
   public collected = false;
   public missed = false;
@@ -39,7 +43,6 @@ export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
     // -------------------------------
     // Scaling
     // -------------------------------
-    const anims = scene.anims;
     const textureFrame = scene.textures.getFrame(spriteKey, this.frame.name);
     const frameHeight = textureFrame?.height ?? 256;
 
@@ -56,7 +59,7 @@ export default class MusicNoteSprite extends Phaser.Physics.Arcade.Sprite {
   update(): void {
     if (this.collected || this.missed) return;
 
-    const player = (this.scene as any).player as Phaser.Physics.Arcade.Sprite;
+    const player = (this.scene as SceneWithPlayer).player;
 
     if ((player && this.x < player.x) || this.x < -50) {
       this.missed = true;
